@@ -72,43 +72,72 @@
       <script src="https://ornateshoppe.com/demo_footer/assets/js/bootstrap.bundle.min.js"></script>
 
      <script>
-        function sendHeightToParent() {
-            const height = document.documentElement.scrollHeight;
-            console.log({ height: height, url: window.location.href });
-            window.parent.postMessage(JSON.stringify({ height: height, url: window.location.href }), '*');
-        }
-    
-        // Debounce function to limit the rate of sendHeightToParent calls
-        function debounce(func, wait) {
-            let timeout;
-            return function(...args) {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(this, args), wait);
-            };
-        }
-    
-        const debouncedSendHeight = debounce(() => sendHeightToParent(), 100);
-    
-        // Use MutationObserver to detect changes in the DOM
-        const observer = new MutationObserver((mutations) => {
-            debouncedSendHeight(); // Send the updated height after mutations settle
-        });
-    
-        // Start observing the body element for changes
-        observer.observe(document.body, {
-            childList: true,     // Watch for child nodes added/removed
-            subtree: true,       // Watch entire subtree of body
-            attributes: true,    // Watch for attribute changes
-            characterData: true  // Watch for text content changes
-        });
-    
-        window.onload = () => {
-            sendHeightToParent(); // Initial load
+    function sendHeightToParent() {
+        const height = document.documentElement.scrollHeight;
+        console.log({ height: height, url: window.location.href });
+        window.parent.postMessage(JSON.stringify({ height: height, url: window.location.href }), '*');
+    }
+
+    // Debounce function to limit the rate of sendHeightToParent calls
+    function debounce(func, wait) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
         };
-    
-        window.onresize = () => {
-            sendHeightToParent(); // Send height on window resize
-        };
-    </script>
+    }
+
+    const debouncedSendHeight = debounce(() => sendHeightToParent(), 100);
+
+    // Use MutationObserver to detect changes in the DOM
+    const observer = new MutationObserver((mutations) => {
+        debouncedSendHeight(); // Send the updated height after mutations settle
+    });
+
+    // Start observing the body element for changes
+    observer.observe(document.body, {
+        childList: true,     // Watch for child nodes added/removed
+        subtree: true,       // Watch entire subtree of body
+        attributes: true,    // Watch for attribute changes
+        characterData: true  // Watch for text content changes
+    });
+
+    // Ensure images or other resources are fully loaded
+    function waitForImagesToLoad() {
+        const images = document.images;
+        let loadedCount = 0;
+        const totalImages = images.length;
+
+        function checkAllImagesLoaded() {
+            loadedCount++;
+            if (loadedCount === totalImages) {
+                // Once all images are loaded, send the correct height
+                sendHeightToParent();
+            }
+        }
+
+        if (totalImages === 0) {
+            sendHeightToParent(); // No images, just send height immediately
+        } else {
+            for (let i = 0; i < totalImages; i++) {
+                if (images[i].complete) {
+                    checkAllImagesLoaded();
+                } else {
+                    images[i].addEventListener('load', checkAllImagesLoaded);
+                    images[i].addEventListener('error', checkAllImagesLoaded); // Handle errors gracefully
+                }
+            }
+        }
+    }
+
+    window.onload = () => {
+        waitForImagesToLoad(); // Make sure images are loaded before sending the initial height
+    };
+
+    window.onresize = () => {
+        sendHeightToParent(); // Send height on window resize
+    };
+</script>
+
    </body>
 </html>
