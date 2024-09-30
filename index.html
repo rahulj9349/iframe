@@ -127,7 +127,7 @@
             };
         }
     
-        const debouncedSendHeight = debounce(() => sendHeightToParent('iframe_banner_1'), 100);
+        const debouncedSendHeight = debounce(() => sendHeightToParent(), 100);
     
         // Use MutationObserver to detect changes in the DOM
         const observer = new MutationObserver((mutations) => {
