@@ -71,50 +71,44 @@
       <script src="https://cdn.jsdelivr.net/npm/icofont@1.0.0/main.min.js"></script>
       <script src="https://ornateshoppe.com/demo_footer/assets/js/bootstrap.bundle.min.js"></script>
 
-     <!-- <script>    
-    function sendHeightToParent() {
-        const height = document.documentElement.scrollHeight;
-        console.log({ height: height, index: 'iframe_banner_2' });
-        window.parent.postMessage(JSON.stringify({ height: height, index: 'iframe_banner_2' }), '*');
-    }
-
-    // Use MutationObserver to detect changes in the DOM
-    const observer = new MutationObserver((mutations) => {
-        // Send the updated height to the parent after mutations settle
-        sendHeightToParent();
-    });
-
-    // Start observing the body element for changes
-    observer.observe(document.body, {
-        childList: true,     // Watch for child nodes added/removed
-        subtree: true,       // Watch entire subtree of body
-        attributes: true,    // Watch for attribute changes
-        characterData: true  // Watch for text content changes
-    });
-
-    window.onload = () => {
-        sendHeightToParent(); // Initial load
-    };
-
-    window.onresize = sendHeightToParent; // Send height on window resize
-</script> -->
-
-      <script>
-    // Function to send the height to the parent window
-    function sendHeightToParent() {
-
-      //alert('here');
-      const height = document.documentElement.scrollHeight;
-      //alert(height);
-      console.log('iframe height='+height);
-      window.parent.postMessage({ height }, '*');
-    }
-
-    // Send the height once the content is loaded
-    window.onload = sendHeightToParent;
-
-    // Send height when the window is resized or content changes
-    window.onresize = sendHeightToParent;
-  </script>
+     <script>
+        function sendHeightToParent() {
+            const height = document.documentElement.scrollHeight;
+            console.log({ height: height, url: window.location.href });
+            window.parent.postMessage(JSON.stringify({ height: height, url: window.location.href }), '*');
+        }
+    
+        // Debounce function to limit the rate of sendHeightToParent calls
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+    
+        const debouncedSendHeight = debounce(() => sendHeightToParent(), 100);
+    
+        // Use MutationObserver to detect changes in the DOM
+        const observer = new MutationObserver((mutations) => {
+            debouncedSendHeight(); // Send the updated height after mutations settle
+        });
+    
+        // Start observing the body element for changes
+        observer.observe(document.body, {
+            childList: true,     // Watch for child nodes added/removed
+            subtree: true,       // Watch entire subtree of body
+            attributes: true,    // Watch for attribute changes
+            characterData: true  // Watch for text content changes
+        });
+    
+        window.onload = () => {
+            sendHeightToParent(); // Initial load
+        };
+    
+        window.onresize = () => {
+            sendHeightToParent(); // Send height on window resize
+        };
+    </script>
    </body>
 </html>
