@@ -114,7 +114,7 @@
     <script>
         function sendHeightToParent() {
             const height = document.documentElement.scrollHeight;
-            console.log({ height: height, index: index });
+            console.log({ height: height, url: window.location.href });
             window.parent.postMessage(JSON.stringify({ height: height, url: window.location.href }), '*');
         }
     
