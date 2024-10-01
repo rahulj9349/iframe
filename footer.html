@@ -81,7 +81,7 @@
     // Debounce function to limit the rate of sendHeightToParent calls
     function debounce(func, wait) {
         let timeout;
-        return function(...args) {
+        return function (...args) {
             clearTimeout(timeout);
             timeout = setTimeout(() => func.apply(this, args), wait);
         };
@@ -137,7 +137,23 @@
     window.onresize = () => {
         sendHeightToParent(); // Send height on window resize
     };
+
+    // Periodic check to ensure height is correct, in case of delayed content loading
+    let checkCount = 0;  // Number of times the height has been checked
+    const maxChecks = 10; // Maximum number of checks to avoid infinite loop
+
+    function periodicHeightCheck() {
+        if (checkCount < maxChecks) {
+            sendHeightToParent();
+            checkCount++;
+            setTimeout(periodicHeightCheck, 500); // Check every 500ms
+        }
+    }
+
+    // Start the periodic height checks
+    setTimeout(periodicHeightCheck, 500);
 </script>
+
 
    </body>
 </html>
