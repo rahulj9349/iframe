@@ -73,156 +73,56 @@
 
     <script>
     function sendHeightToParent() {
-        // Get the maximum of different height measurements to ensure accuracy
-        const scrollHeight = document.documentElement.scrollHeight;
-        const offsetHeight = document.documentElement.offsetHeight;
-        const boundingRectHeight = document.documentElement.getBoundingClientRect().height;
+        // Get the height of the document
+        const height = document.body.scrollHeight || document.documentElement.scrollHeight;
 
-        // Choose the maximum of the calculated heights
-        const height = Math.max(scrollHeight, offsetHeight, boundingRectHeight);
-
-        //console.log({ height: height, url: window.location.href });
-        window.parent.postMessage(JSON.stringify({ height: height, url: window.location.href }), '*');
+        // Send height along with URL to the parent
+        window.parent.postMessage(JSON.stringify({
+            height: height,
+            url: window.location.href
+        }), '*');
     }
 
-    // Debounce function to limit the rate of sendHeightToParent calls
-    function debounce(func, wait) {
-        let timeout;
-        return function (...args) {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => func.apply(this, args), wait);
-        };
-    }
-
-    const debouncedSendHeight = debounce(() => sendHeightToParent(), 100);
-
-    // Function to wait until all fonts are loaded
-    function waitForFontsToLoad() {
-        if (document.fonts) {
-            return document.fonts.ready;
-        }
-        return Promise.resolve();
-    }
-
-    // Retry mechanism with increasing delays
-    function retrySendHeight(times, delay) {
-        let retries = 0;
-
-        function attempt() {
-            const scrollHeight = document.documentElement.scrollHeight;
-            const offsetHeight = document.documentElement.offsetHeight;
-            const boundingRectHeight = document.documentElement.getBoundingClientRect().height;
-            const currentHeight = Math.max(scrollHeight, offsetHeight, boundingRectHeight);
-
-            // Only send if height seems stable
-            if (retries < times) {
-                retries++;
-                setTimeout(attempt, delay * retries); // Increase delay exponentially
-            } else {
-                // Final attempt to send height
-                sendHeightToParent();
+    // Function to throttle the execution of a function (prevents rapid firing)
+    function throttle(func, limit) {
+        let inThrottle;
+        return function() {
+            const args = arguments;
+            if (!inThrottle) {
+                func.apply(this, args);
+                inThrottle = true;
+                setTimeout(() => inThrottle = false, limit);
             }
         }
-
-        attempt();
     }
 
-    // Start observing the body element for changes using MutationObserver
+    // Set up a MutationObserver to detect changes in the DOM
     const observer = new MutationObserver((mutations) => {
-        const significantMutations = mutations.some((mutation) => {
-            return mutation.type === 'childList' || mutation.type === 'characterData';
-        });
-        if (significantMutations) {
-            debouncedSendHeight(); // Send the updated height after significant mutations settle
-        }
+        // Throttle the height sending function to reduce excessive calls
+        throttledSendHeight();
     });
 
+    // Start observing the body for changes in DOM
     observer.observe(document.body, {
-        childList: true,     // Watch for child nodes added/removed
-        subtree: true,       // Watch entire subtree of body
-        attributes: true,    // Watch for attribute changes
-        characterData: true  // Watch for text content changes
+        childList: true,    // Detect when child nodes are added or removed
+        subtree: true,      // Watch for changes in all descendants of body
+        attributes: false,  // Don't need to monitor attribute changes
+        characterData: false// Don't need to monitor text content changes
     });
 
-    // Wait for all content to load (including images, fonts, etc.)
-    function waitForContent() {
-        return new Promise((resolve) => {
-            const images = document.images;
-            let loadedCount = 0;
-            const totalImages = images.length;
+    // Throttled sendHeight function with a delay of 150ms
+    const throttledSendHeight = throttle(sendHeightToParent, 150);
 
-            function checkAllImagesLoaded() {
-                loadedCount++;
-                if (loadedCount === totalImages) {
-                    resolve(); // All images loaded, resolve the promise
-                }
-            }
-
-            if (totalImages === 0) {
-                resolve(); // No images, resolve immediately
-            } else {
-                for (let i = 0; i < totalImages; i++) {
-                    if (images[i].complete) {
-                        checkAllImagesLoaded();
-                    } else {
-                        images[i].addEventListener('load', checkAllImagesLoaded);
-                        images[i].addEventListener('error', checkAllImagesLoaded); // Handle errors gracefully
-                    }
-                }
-            }
-        });
-    }
-
-    // Ensure all content, including fonts and images, is loaded before sending height
-    async function ensureFullLoad() {
-        await Promise.all([waitForContent(), waitForFontsToLoad()]);
-        sendHeightToParent(); // Send height after everything is loaded
-        retrySendHeight(5, 100); // Retry 5 times with increasing delay
-    }
-
+    // Send initial height after the page fully loads
     window.onload = () => {
-        setTimeout(ensureFullLoad, 200); // Make sure images and fonts are loaded before sending the initial height
+        setTimeout(() => {
+            sendHeightToParent(); // Ensure all content has loaded
+        }, 200);
     };
 
-    window.onresize = () => {
-        sendHeightToParent(); // Send height on window resize
-    };
-
-    // Periodic check to ensure height is correct, in case of delayed content loading
-    let lastHeight = 0;
-    let stableChecks = 0;  // Number of checks where the height has been stable
-    const maxStableChecks = 3; // Require height to be stable for 3 checks
-    const maxChecks = 20; // Maximum number of checks
-    let checkCount = 0;
-
-    function periodicHeightCheck() {
-        const scrollHeight = document.documentElement.scrollHeight;
-        const offsetHeight = document.documentElement.offsetHeight;
-        const boundingRectHeight = document.documentElement.getBoundingClientRect().height;
-        const currentHeight = Math.max(scrollHeight, offsetHeight, boundingRectHeight);
-
-        if (currentHeight === lastHeight) {
-            stableChecks++;
-        } else {
-            stableChecks = 0; // Reset if the height changed
-        }
-
-        if (stableChecks >= maxStableChecks || checkCount >= maxChecks) {
-            // If the height has been stable for a few checks or max checks reached, send height
-            sendHeightToParent();
-        } else {
-            // Retry after 200ms
-            lastHeight = currentHeight;
-            checkCount++;
-            setTimeout(periodicHeightCheck, 200); // Check every 200ms
-        }
-    }
-
-    // Start the periodic height checks after a slight delay to give the page time to fully load
-    setTimeout(periodicHeightCheck, 500); // Initial delay for the periodic check
+    // Also send height on window resize
+    window.onresize = sendHeightToParent;
 </script>
-
-
 
 
    </body>
