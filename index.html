@@ -179,20 +179,36 @@
     };
 
     // Periodic check to ensure height is correct, in case of delayed content loading
-    let checkCount = 0;  // Number of times the height has been checked
-    const maxChecks = 10; // Maximum number of checks to avoid infinite loop
+    let lastHeight = 0;
+    let stableChecks = 0;  // Number of checks where the height has been stable
+    const maxStableChecks = 3; // Require height to be stable for 3 checks
+    const maxChecks = 20; // Maximum number of checks
+    let checkCount = 0;
 
     function periodicHeightCheck() {
-        if (checkCount < maxChecks) {
+        const currentHeight = document.documentElement.scrollHeight;
+        if (currentHeight === lastHeight) {
+            stableChecks++;
+        } else {
+            stableChecks = 0; // Reset if the height changed
+        }
+
+        if (stableChecks >= maxStableChecks || checkCount >= maxChecks) {
+            // If the height has been stable for a few checks or max checks reached, send height
             sendHeightToParent();
+        } else {
+            // Retry after 200ms
+            lastHeight = currentHeight;
             checkCount++;
-            setTimeout(periodicHeightCheck, 500); // Check every 500ms
+            setTimeout(periodicHeightCheck, 200); // Check every 200ms
         }
     }
 
-    // Start the periodic height checks
-    setTimeout(periodicHeightCheck, 500);
+    // Start the periodic height checks after a slight delay to give the page time to fully load
+    setTimeout(periodicHeightCheck, 200);
+
 </script>
+
 
 
     
