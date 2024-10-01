@@ -136,12 +136,47 @@
 
     const debouncedSendHeight = debounce(() => sendHeightToParent(), 100);
 
-    // Use MutationObserver to detect changes in the DOM
+    // Function to wait until all fonts are loaded
+    function waitForFontsToLoad() {
+        if (document.fonts) {
+            return document.fonts.ready;
+        }
+        return Promise.resolve();
+    }
+
+    // Retry mechanism with increasing delays
+    function retrySendHeight(times, delay) {
+        let retries = 0;
+
+        function attempt() {
+            const scrollHeight = document.documentElement.scrollHeight;
+            const offsetHeight = document.documentElement.offsetHeight;
+            const boundingRectHeight = document.documentElement.getBoundingClientRect().height;
+            const currentHeight = Math.max(scrollHeight, offsetHeight, boundingRectHeight);
+
+            // Only send if height seems stable
+            if (retries < times) {
+                retries++;
+                setTimeout(attempt, delay * retries); // Increase delay exponentially
+            } else {
+                // Final attempt to send height
+                sendHeightToParent();
+            }
+        }
+
+        attempt();
+    }
+
+    // Start observing the body element for changes using MutationObserver
     const observer = new MutationObserver((mutations) => {
-        debouncedSendHeight(); // Send the updated height after mutations settle
+        const significantMutations = mutations.some((mutation) => {
+            return mutation.type === 'childList' || mutation.type === 'characterData';
+        });
+        if (significantMutations) {
+            debouncedSendHeight(); // Send the updated height after significant mutations settle
+        }
     });
 
-    // Start observing the body element for changes
     observer.observe(document.body, {
         childList: true,     // Watch for child nodes added/removed
         subtree: true,       // Watch entire subtree of body
@@ -149,36 +184,44 @@
         characterData: true  // Watch for text content changes
     });
 
-    // Ensure images or other resources are fully loaded
-    function waitForImagesToLoad() {
-        const images = document.images;
-        let loadedCount = 0;
-        const totalImages = images.length;
+    // Wait for all content to load (including images, fonts, etc.)
+    function waitForContent() {
+        return new Promise((resolve) => {
+            const images = document.images;
+            let loadedCount = 0;
+            const totalImages = images.length;
 
-        function checkAllImagesLoaded() {
-            loadedCount++;
-            if (loadedCount === totalImages) {
-                // Once all images are loaded, send the correct height
-                sendHeightToParent();
-            }
-        }
-
-        if (totalImages === 0) {
-            sendHeightToParent(); // No images, just send height immediately
-        } else {
-            for (let i = 0; i < totalImages; i++) {
-                if (images[i].complete) {
-                    checkAllImagesLoaded();
-                } else {
-                    images[i].addEventListener('load', checkAllImagesLoaded);
-                    images[i].addEventListener('error', checkAllImagesLoaded); // Handle errors gracefully
+            function checkAllImagesLoaded() {
+                loadedCount++;
+                if (loadedCount === totalImages) {
+                    resolve(); // All images loaded, resolve the promise
                 }
             }
-        }
+
+            if (totalImages === 0) {
+                resolve(); // No images, resolve immediately
+            } else {
+                for (let i = 0; i < totalImages; i++) {
+                    if (images[i].complete) {
+                        checkAllImagesLoaded();
+                    } else {
+                        images[i].addEventListener('load', checkAllImagesLoaded);
+                        images[i].addEventListener('error', checkAllImagesLoaded); // Handle errors gracefully
+                    }
+                }
+            }
+        });
+    }
+
+    // Ensure all content, including fonts and images, is loaded before sending height
+    async function ensureFullLoad() {
+        await Promise.all([waitForContent(), waitForFontsToLoad()]);
+        sendHeightToParent(); // Send height after everything is loaded
+        retrySendHeight(5, 100); // Retry 5 times with increasing delay
     }
 
     window.onload = () => {
-        setTimeout(waitForImagesToLoad, 200); // Make sure images are loaded before sending the initial height
+        setTimeout(ensureFullLoad, 200); // Make sure images and fonts are loaded before sending the initial height
     };
 
     window.onresize = () => {
@@ -193,7 +236,6 @@
     let checkCount = 0;
 
     function periodicHeightCheck() {
-        // Use a combination of height calculations
         const scrollHeight = document.documentElement.scrollHeight;
         const offsetHeight = document.documentElement.offsetHeight;
         const boundingRectHeight = document.documentElement.getBoundingClientRect().height;
