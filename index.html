@@ -121,7 +121,7 @@
         // Choose the maximum of the calculated heights
         const height = Math.max(scrollHeight, offsetHeight, boundingRectHeight);
 
-        console.log({ height: height, url: window.location.href });
+        //console.log({ height: height, url: window.location.href });
         window.parent.postMessage(JSON.stringify({ height: height, url: window.location.href }), '*');
     }
 
