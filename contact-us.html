@@ -53,5 +53,47 @@
       </div>
       <script src="https://cdn.jsdelivr.net/npm/icofont@1.0.0/main.min.js"></script>
       <script src="https://ornateshoppe.com/jdsolitaire_html/js/bootstrap.bundle.min.js"></script>
+       <script>
+          function sendHeightToParent() {
+              const height = document.body.scrollHeight || document.documentElement.scrollHeight;
+              window.parent.postMessage(JSON.stringify({
+                  height: height,
+                  url: window.location.href
+              }), '*');
+          }
+
+          function throttle(func, limit) {
+              let inThrottle;
+              return function() {
+                  const args = arguments;
+                  if (!inThrottle) {
+                      func.apply(this, args);
+                      inThrottle = true;
+                      setTimeout(() => inThrottle = false, limit);
+                  }
+              }
+          }
+
+          const observer = new MutationObserver(() => {
+              throttledSendHeight();
+          });
+
+          observer.observe(document.body, {
+              childList: true,
+              subtree: true,
+              attributes: false,
+              characterData: false
+          });
+
+          const throttledSendHeight = throttle(sendHeightToParent, 150);
+
+          window.onload = () => {
+              setTimeout(() => {
+                  sendHeightToParent();
+              }, 200);
+          };
+
+          window.onresize = sendHeightToParent;
+      </script>
    </body>
 </html>
