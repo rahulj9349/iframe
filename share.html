@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web Share API Example</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .btn-share {
+      background-color: #007bff;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .btn-share:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <h1>Share This Product</h1>
+  <p>Click the button below to share this product with others.</p>
+  <button class="btn-share" onclick="shareProduct()">Share</button>
+
+  <script>
+    function shareProduct() {
+      const productDetails = {
+        title: "Divine Evil Eye Diamond Ring",
+        text: "Check out this beautiful diamond ring!",
+        url: "https://www.caratlane.com/jewellery/divine-evil-eye-diamond-ring-jr06929-1yp900.html"
+      };
+
+      if (navigator.share) {
+        navigator.share(productDetails)
+          .then(() => console.log('Shared successfully'))
+          .catch((error) => {
+            if (error.name === 'AbortError') {
+              console.log('User canceled sharing.');
+            } else {
+              console.error('Error sharing product:', error);
+            }
+          });
+      } else {
+        alert("Web Share API is not supported in your browser.");
+      }
+    }
+  </script>
+</body>
+</html>
