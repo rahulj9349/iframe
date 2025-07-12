@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Join Agora Video Meeting</title>
+  <script src="https://download.agora.io/sdk/release/AgoraRTC_N.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    video { width: 320px; height: 240px; background: #000; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h2>Join Agora Video Meeting</h2>
+
+  <label>App ID:</label><br>
+  <input id="appId" value="your_app_id_here" /><br><br>
+
+  <label>UID:</label><br>
+  <input id="uid" value="12345" /><br><br>
+
+  <label>Channel Name:</label><br>
+  <input id="channel" value="test_channel" /><br><br>
+
+  <label>Video Token:</label><br>
+  <textarea id="token" rows="3" cols="60">your_token_here</textarea><br><br>
+
+  <button onclick="joinMeeting()">Join Meeting</button>
+
+  <div id="local-video"></div>
+
+  <script>
+    let client, localTracks;
+
+    async function joinMeeting() {
+      const appId = document.getElementById('appId').value.trim();
+      const uid = Number(document.getElementById('uid').value.trim());
+      const channel = document.getElementById('channel').value.trim();
+      const token = document.getElementById('token').value.trim();
+
+      client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+
+      await client.join(appId, channel, token, uid);
+      localTracks = await AgoraRTC.createMicrophoneAndCameraTracks();
+
+      const videoContainer = document.getElementById('local-video');
+      const videoEl = document.createElement('div');
+      videoEl.id = "local-player";
+      videoContainer.appendChild(videoEl);
+
+      localTracks[1].play("local-player");
+      await client.publish(localTracks);
+
+      alert("✅ Joined channel: " + channel);
+    }
+  </script>
+</body>
+</html>
