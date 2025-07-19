@@ -20,6 +20,7 @@
             justify-content: center;
             min-height: 100vh;
             padding: 20px;
+            color: white;
         }
 
         .video-container {
@@ -30,13 +31,15 @@
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            min-height: 400px;
         }
 
         #video {
             width: 100%;
-            height: auto;
+            height: 400px;
             display: block;
             background: #000;
+            object-fit: cover;
         }
 
         .controls {
@@ -161,9 +164,10 @@
         /* Loading animation */
         .loading {
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 300px;
+            height: 400px;
             color: white;
             font-size: 18px;
         }
@@ -182,9 +186,26 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        .debug-info {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            max-width: 300px;
+            z-index: 1000;
+        }
     </style>
 </head>
 <body>
+    <div id="debugInfo" class="debug-info">
+        Debug: Initializing...
+    </div>
+
     <div class="video-container">
         <div id="loading" class="loading">
             <div class="spinner"></div>
@@ -222,6 +243,7 @@
                 this.status = document.getElementById('status');
                 this.error = document.getElementById('error');
                 this.loading = document.getElementById('loading');
+                this.debugInfo = document.getElementById('debugInfo');
                 
                 this.stream = null;
                 this.currentFacingMode = 'user'; // 'user' for front, 'environment' for back
@@ -231,10 +253,27 @@
             }
 
             detectMobile() {
-                return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                this.debug(`Mobile detected: ${isMobile}`);
+                return isMobile;
             }
 
+            debug(message) {
+                console.log(message);
+                if (this.debugInfo) {
+                    this.debugInfo.innerHTML += '<br>' + message;
+                }
+            }
             init() {
+                this.debug('Initializing VideoCamera...');
+                
+                // Check if getUserMedia is supported
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    this.showError('Camera not supported in this browser');
+                    this.debug('getUserMedia not supported');
+                    return;
+                }
+                
                 this.startBtn.addEventListener('click', () => this.startCamera());
                 this.stopBtn.addEventListener('click', () => this.stopCamera());
                 this.toggleBtn.addEventListener('click', () => this.toggleCamera());
@@ -242,28 +281,48 @@
                 // Show toggle button only on mobile
                 if (this.isMobile) {
                     this.toggleBtn.style.display = 'flex';
+                    this.debug('Mobile toggle button enabled');
                 }
                 
                 this.updateStatus('Camera: Off');
                 this.hideLoading();
+                this.debug('Initialization complete');
             }
 
             async startCamera() {
                 try {
+                    this.debug('Starting camera...');
                     this.showLoading('Starting camera...');
                     this.hideError();
                     
-                    const constraints = {
+                    // Simple constraints first
+                    let constraints = {
                         video: {
-                            facingMode: this.currentFacingMode,
-                            width: { ideal: 1280 },
-                            height: { ideal: 720 }
+                            facingMode: this.currentFacingMode
                         },
                         audio: false
                     };
+                    
+                    this.debug(`Requesting camera with facingMode: ${this.currentFacingMode}`);
 
                     this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+                    this.debug('Camera stream obtained successfully');
+                    
                     this.video.srcObject = this.stream;
+                    
+                    // Wait for video to load
+                    await new Promise((resolve, reject) => {
+                        this.video.onloadedmetadata = () => {
+                            this.debug('Video metadata loaded');
+                            resolve();
+                        };
+                        this.video.onerror = (e) => {
+                            this.debug('Video error: ' + e.message);
+                            reject(e);
+                        };
+                        // Timeout after 5 seconds
+                        setTimeout(() => reject(new Error('Video load timeout')), 5000);
+                    });
                     
                     this.video.style.display = 'block';
                     this.startBtn.style.display = 'none';
@@ -275,18 +334,41 @@
                     
                     this.updateStatus(`Camera: On (${this.currentFacingMode === 'user' ? 'Front' : 'Back'})`);
                     this.hideLoading();
+                    this.debug('Camera started successfully');
                     
                 } catch (error) {
                     console.error('Error starting camera:', error);
+                    this.debug('Camera error: ' + error.message);
                     this.showError('Failed to start camera: ' + error.message);
                     this.hideLoading();
+                    
+                    // Try with basic constraints if advanced ones fail
+                    if (error.name === 'OverconstrainedError') {
+                        this.debug('Trying with basic constraints...');
+                        try {
+                            const basicConstraints = { video: true, audio: false };
+                            this.stream = await navigator.mediaDevices.getUserMedia(basicConstraints);
+                            this.video.srcObject = this.stream;
+                            this.video.style.display = 'block';
+                            this.startBtn.style.display = 'none';
+                            this.stopBtn.style.display = 'flex';
+                            this.updateStatus('Camera: On (Basic)');
+                            this.hideLoading();
+                            this.hideError();
+                            this.debug('Basic camera started successfully');
+                        } catch (basicError) {
+                            this.debug('Basic camera also failed: ' + basicError.message);
+                        }
+                    }
                 }
             }
 
             stopCamera() {
+                this.debug('Stopping camera...');
                 if (this.stream) {
                     this.stream.getTracks().forEach(track => track.stop());
                     this.stream = null;
+                    this.debug('Camera stream stopped');
                 }
                 
                 this.video.srcObject = null;
@@ -302,6 +384,7 @@
                 if (!this.isMobile || !this.stream) return;
                 
                 try {
+                    this.debug('Toggling camera...');
                     this.showLoading('Switching camera...');
                     
                     // Stop current stream
@@ -309,13 +392,12 @@
                     
                     // Toggle facing mode
                     this.currentFacingMode = this.currentFacingMode === 'user' ? 'environment' : 'user';
+                    this.debug(`Switching to: ${this.currentFacingMode}`);
                     
                     // Start new stream with new facing mode
                     const constraints = {
                         video: {
-                            facingMode: this.currentFacingMode,
-                            width: { ideal: 1280 },
-                            height: { ideal: 720 }
+                            facingMode: this.currentFacingMode
                         },
                         audio: false
                     };
@@ -325,9 +407,11 @@
                     
                     this.updateStatus(`Camera: On (${this.currentFacingMode === 'user' ? 'Front' : 'Back'})`);
                     this.hideLoading();
+                    this.debug('Camera toggle successful');
                     
                 } catch (error) {
                     console.error('Error toggling camera:', error);
+                    this.debug('Toggle error: ' + error.message);
                     this.showError('Failed to switch camera: ' + error.message);
                     this.hideLoading();
                     
@@ -338,11 +422,13 @@
 
             updateStatus(message) {
                 this.status.textContent = message;
+                this.debug('Status: ' + message);
             }
 
             showError(message) {
                 this.error.textContent = message;
                 this.error.style.display = 'block';
+                this.debug('Error: ' + message);
             }
 
             hideError() {
@@ -362,7 +448,7 @@
 
         // Initialize when page loads
         document.addEventListener('DOMContentLoaded', () => {
-            new VideoCamera();
+            window.videoCamera = new VideoCamera();
         });
 
         // Handle page unload
