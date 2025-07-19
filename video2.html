@@ -1,594 +1,376 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <title>Basic Communication v2</title>
-  <link rel="stylesheet" href="./assets/common.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Video Camera</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            background: #222;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        #video {
+            width: 100%;
+            height: auto;
+            display: block;
+            background: #000;
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 10;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .toggle-camera {
+            background: rgba(33, 150, 243, 0.9);
+            color: white;
+        }
+
+        .toggle-camera:hover {
+            background: rgba(33, 150, 243, 1);
+        }
+
+        .start-btn {
+            background: rgba(76, 175, 80, 0.9);
+            color: white;
+        }
+
+        .start-btn:hover {
+            background: rgba(76, 175, 80, 1);
+        }
+
+        .stop-btn {
+            background: rgba(244, 67, 54, 0.9);
+            color: white;
+        }
+
+        .stop-btn:hover {
+            background: rgba(244, 67, 54, 1);
+        }
+
+        .status {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+        }
+
+        .error {
+            color: #ff6b6b;
+            text-align: center;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 107, 107, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 107, 107, 0.3);
+        }
+
+        /* Mobile specific styles */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .video-container {
+                border-radius: 8px;
+            }
+
+            .controls {
+                bottom: 15px;
+                gap: 10px;
+            }
+
+            .btn {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+
+            .status {
+                top: 15px;
+                left: 15px;
+                font-size: 12px;
+            }
+        }
+
+        /* Hide toggle button on desktop */
+        @media (min-width: 769px) {
+            .toggle-camera {
+                display: none;
+            }
+        }
+
+        /* Loading animation */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 300px;
+            color: white;
+            font-size: 18px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
-<body class="agora-theme">
-  <div class="navbar-fixed">
-    <nav class="agora-navbar">
-      <div class="nav-wrapper agora-primary-bg valign-wrapper">
-        <h5 class="left-align">Basic Communication</h5>
-        <a href="https://github.com/AgoraIO/Basic-Video-Call/tree/master/One-to-One-Video/Agora-Web-Tutorial-1to1" class="agora-github-pin"></a>
-      </div>
-    </nav>
-  </div>
-  <form id="form" class="row col l12 s12">
-    <div class="row container col l12 s12">
-      <div class="col" style="min-width: 433px; max-width: 443px">
-        <div class="card" style="margin-top: 0px; margin-bottom: 0px;">
-          <div class="row card-content" style="margin-bottom: 0px;">
-              <div class="input-field">
-                <label for="appID" class="active">App ID</label>
-                <input type="text" placeholder="App ID" name="appID">
-              </div>
-              <div class="input-field">
-                <label for="channel" class="active">Channel</label>
-                <input type="text" placeholder="channel" name="channel">
-              </div>
-              <div class="input-field">
-                <label for="token" class="active">Token</label>
-                <input type="text" placeholder="token" name="token">
-              </div>
-              <div class="row" style="margin: 0">
-                <div class="col s12">
-                <button class="btn btn-raised btn-primary waves-effect waves-light" id="join">JOIN</button>
-                <button class="btn btn-raised btn-primary waves-effect waves-light" id="leave">LEAVE</button>
-                <button class="btn btn-raised btn-primary waves-effect waves-light" id="publish">PUBLISH</button>
-                <button class="btn btn-raised btn-primary waves-effect waves-light" id="unpublish">UNPUBLISH</button>
-                </div>
-              </div>
-          </div>
+<body>
+    <div class="video-container">
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <span>Initializing camera...</span>
         </div>
-        <ul class="collapsible card agora-secondary-border" style="margin-top: .4rem; border: 1px ">
-          <li>
-            <div class="collapsible-header agora-secondary-bg">
-              <h8 class="center-align">ADVANCED SETTINGS</h8>
-            </div>
-            <div class="collapsible-body card-content">
-              <div class="row">
-                <div class="col s12">
-                  <div class="input-field">
-                    <label for="UID" class="active">UID</label>
-                    <input type="number" placeholder="UID" name="uid">
-                  </div>
-                  <div class="input-field">
-                    <label for="cameraId" class="active">CAMERA</label>
-                    <select name="cameraId" id="cameraId"></select>
-                  </div>
-                  <div class="input-field">
-                    <label for="microphoneId" class="active">MICROPHONE</label>
-                    <select name="microphoneId" id="microphoneId"></select>
-                  </div>
-                  <div class="input-field">
-                    <label for="cameraResolution" class="active">CAMERA RESOLUTION</label>
-                    <select name="cameraResolution" id="cameraResolution"></select>
-                  </div>
-                  <div class="row col s12">
-                    <div class="row">
-                      <label for="mode" class="active">MODE</label>
-                    </div>
-                    <div class="row">
-                      <label>
-                        <input type="radio" class="with-gap" name="mode" value="live" checked />
-                        <span>live</span>
-                      </label>
-
-                      <label>
-                        <input type="radio" class="with-gap" name="mode" value="rtc" />
-                        <span>rtc</span>
-                      </label>
-                    </div>
-                  </div>
-                  <div class="row col s12">
-                    <div class="row">
-                      <label for="codec" class="active">CODEC</label>
-                    </div>
-                    <div class="row">
-                      <label>
-                        <input type="radio" class="with-gap" name="codec" value="h264" checked />
-                        <span>h264</span>
-                      </label>
-
-                      <label>
-                        <input type="radio" class="with-gap" name="codec" value="vp8" />
-                        <span>vp8</span>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-          </li>
-        </ul>
-      </div>
-      <div class="col s7">
-        <div class="video-grid" id="video">
-          <div class="video-view">
-            <div id="local_stream" class="video-placeholder"></div>
-            <div id="local_video_info" class="video-profile hide"></div>
-            <div id="video_autoplay_local" class="autoplay-fallback hide"></div>
-          </div>
+        
+        <video id="video" autoplay muted playsinline style="display: none;"></video>
+        
+        <div class="status" id="status">Camera: Off</div>
+        
+        <div class="controls">
+            <button id="startBtn" class="btn start-btn">
+                📹 Start Camera
+            </button>
+            
+            <button id="stopBtn" class="btn stop-btn" style="display: none;">
+                ⏹️ Stop Camera
+            </button>
+            
+            <button id="toggleBtn" class="btn toggle-camera" style="display: none;">
+                🔄 Flip Camera
+            </button>
         </div>
-      </div>
     </div>
-  </form>
-  <script src="vendor/jquery.min.js"></script>
-  <script src="vendor/materialize.min.js"></script>
-  <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.23.4.js"></script>
-  <script>
-    console.log("agora sdk version: " + AgoraRTC.VERSION + " compatible: " + AgoraRTC.checkSystemRequirements());
-    var resolutions = [
-      {
-        name: "default",
-        value: "default",
-      },
-      {
-        name: "480p",
-        value: "480p",
-      },
-      {
-        name: "720p",
-        value: "720p",
-      },
-      {
-        name: "1080p",
-        value: "1080p"
-      }
-    ]
 
-    function Toastify (options) {
-      M.toast({html: options.text, classes: options.classes})
-    }
+    <div id="error" class="error" style="display: none;"></div>
 
-    var Toast = {
-      info: (msg) => {
-        Toastify({
-          text: msg,
-          classes: "info-toast"
-        })
-      },
-      notice: (msg) => {
-        Toastify({
-          text: msg,
-          classes: "notice-toast"
-        })
-      },
-      error: (msg) => {
-        Toastify({
-          text: msg,
-          classes: "error-toast"
-        })
-      }
-    }
-    function validator(formData, fields) {
-      var keys = Object.keys(formData)
-      for (let key of keys) {
-        if (fields.indexOf(key) != -1) {
-          if (!formData[key]) {
-            Toast.error("Please Enter " + key)
-            return false
-          }
-        }
-      }
-      return true
-    }
-
-    function serializeformData() {
-      var formData = $("#form").serializeArray()
-      var obj = {}
-      for (var item of formData) {
-        var key = item.name
-        var val = item.value
-        obj[key] = val
-      }
-      return obj
-    }
-
-    function addView (id, show) {
-      if (!$("#" + id)[0]) {
-        $("<div/>", {
-          id: "remote_video_panel_" + id,
-          class: "video-view",
-        }).appendTo("#video")
-
-        $("<div/>", {
-          id: "remote_video_" + id,
-          class: "video-placeholder",
-        }).appendTo("#remote_video_panel_" + id)
-
-        $("<div/>", {
-          id: "remote_video_info_" + id,
-          class: "video-profile " + (show ? "" :  "hide"),
-        }).appendTo("#remote_video_panel_" + id)
-
-        $("<div/>", {
-          id: "video_autoplay_"+ id,
-          class: "autoplay-fallback hide",
-        }).appendTo("#remote_video_panel_" + id)
-      }
-    }
-    function removeView (id) {
-      if ($("#remote_video_panel_" + id)[0]) {
-        $("#remote_video_panel_"+id).remove()
-      }
-    }
-
-    function getDevices (next) {
-      AgoraRTC.getDevices(function (items) {
-        items.filter(function (item) {
-          return ["audioinput", "videoinput"].indexOf(item.kind) !== -1
-        })
-        .map(function (item) {
-          return {
-          name: item.label,
-          value: item.deviceId,
-          kind: item.kind,
-          }
-        })
-        var videos = []
-        var audios = []
-        for (var i = 0; i < items.length; i++) {
-          var item = items[i]
-          if ("videoinput" == item.kind) {
-            var name = item.label
-            var value = item.deviceId
-            if (!name) {
-              name = "camera-" + videos.length
+    <script>
+        class VideoCamera {
+            constructor() {
+                this.video = document.getElementById('video');
+                this.startBtn = document.getElementById('startBtn');
+                this.stopBtn = document.getElementById('stopBtn');
+                this.toggleBtn = document.getElementById('toggleBtn');
+                this.status = document.getElementById('status');
+                this.error = document.getElementById('error');
+                this.loading = document.getElementById('loading');
+                
+                this.stream = null;
+                this.currentFacingMode = 'user'; // 'user' for front, 'environment' for back
+                this.isMobile = this.detectMobile();
+                
+                this.init();
             }
-            videos.push({
-              name: name,
-              value: value,
-              kind: item.kind
-            })
-          }
-          if ("audioinput" == item.kind) {
-            var name = item.label
-            var value = item.deviceId
-            if (!name) {
-              name = "microphone-" + audios.length
+
+            detectMobile() {
+                return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
             }
-            audios.push({
-              name: name,
-              value: value,
-              kind: item.kind
-            })
-          }
+
+            init() {
+                this.startBtn.addEventListener('click', () => this.startCamera());
+                this.stopBtn.addEventListener('click', () => this.stopCamera());
+                this.toggleBtn.addEventListener('click', () => this.toggleCamera());
+                
+                // Show toggle button only on mobile
+                if (this.isMobile) {
+                    this.toggleBtn.style.display = 'flex';
+                }
+                
+                this.updateStatus('Camera: Off');
+                this.hideLoading();
+            }
+
+            async startCamera() {
+                try {
+                    this.showLoading('Starting camera...');
+                    this.hideError();
+                    
+                    const constraints = {
+                        video: {
+                            facingMode: this.currentFacingMode,
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 }
+                        },
+                        audio: false
+                    };
+
+                    this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+                    this.video.srcObject = this.stream;
+                    
+                    this.video.style.display = 'block';
+                    this.startBtn.style.display = 'none';
+                    this.stopBtn.style.display = 'flex';
+                    
+                    if (this.isMobile) {
+                        this.toggleBtn.style.display = 'flex';
+                    }
+                    
+                    this.updateStatus(`Camera: On (${this.currentFacingMode === 'user' ? 'Front' : 'Back'})`);
+                    this.hideLoading();
+                    
+                } catch (error) {
+                    console.error('Error starting camera:', error);
+                    this.showError('Failed to start camera: ' + error.message);
+                    this.hideLoading();
+                }
+            }
+
+            stopCamera() {
+                if (this.stream) {
+                    this.stream.getTracks().forEach(track => track.stop());
+                    this.stream = null;
+                }
+                
+                this.video.srcObject = null;
+                this.video.style.display = 'none';
+                this.startBtn.style.display = 'flex';
+                this.stopBtn.style.display = 'none';
+                this.toggleBtn.style.display = 'none';
+                
+                this.updateStatus('Camera: Off');
+            }
+
+            async toggleCamera() {
+                if (!this.isMobile || !this.stream) return;
+                
+                try {
+                    this.showLoading('Switching camera...');
+                    
+                    // Stop current stream
+                    this.stream.getTracks().forEach(track => track.stop());
+                    
+                    // Toggle facing mode
+                    this.currentFacingMode = this.currentFacingMode === 'user' ? 'environment' : 'user';
+                    
+                    // Start new stream with new facing mode
+                    const constraints = {
+                        video: {
+                            facingMode: this.currentFacingMode,
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 }
+                        },
+                        audio: false
+                    };
+
+                    this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+                    this.video.srcObject = this.stream;
+                    
+                    this.updateStatus(`Camera: On (${this.currentFacingMode === 'user' ? 'Front' : 'Back'})`);
+                    this.hideLoading();
+                    
+                } catch (error) {
+                    console.error('Error toggling camera:', error);
+                    this.showError('Failed to switch camera: ' + error.message);
+                    this.hideLoading();
+                    
+                    // Revert to previous facing mode
+                    this.currentFacingMode = this.currentFacingMode === 'user' ? 'environment' : 'user';
+                }
+            }
+
+            updateStatus(message) {
+                this.status.textContent = message;
+            }
+
+            showError(message) {
+                this.error.textContent = message;
+                this.error.style.display = 'block';
+            }
+
+            hideError() {
+                this.error.style.display = 'none';
+            }
+
+            showLoading(message = 'Loading...') {
+                this.loading.querySelector('span').textContent = message;
+                this.loading.style.display = 'flex';
+                this.video.style.display = 'none';
+            }
+
+            hideLoading() {
+                this.loading.style.display = 'none';
+            }
         }
-        next({videos: videos, audios: audios})
-      })
-    }
 
-    var rtc = {
-      client: null,
-      joined: false,
-      published: false,
-      localStream: null,
-      remoteStreams: [],
-      params: {}
-    }
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new VideoCamera();
+        });
 
-    function handleEvents (rtc) {
-      // Occurs when an error message is reported and requires error handling.
-      rtc.client.on("error", (err) => {
-        console.log(err)
-      })
-      // Occurs when the peer user leaves the channel; for example, the peer user calls Client.leave.
-      rtc.client.on("peer-leave", function (evt) {
-        var id = evt.uid;
-        console.log("id", evt)
-        let streams = rtc.remoteStreams.filter(e => id !== e.getId())
-        let peerStream = rtc.remoteStreams.find(e => id === e.getId())
-        if(peerStream && peerStream.isPlaying()) {
-          peerStream.stop()
-        }
-        rtc.remoteStreams = streams
-        if (id !== rtc.params.uid) {
-          removeView(id)
-        }
-        Toast.notice("peer leave")
-        console.log("peer-leave", id)
-      })
-      // Occurs when the local stream is published.
-      rtc.client.on("stream-published", function (evt) {
-        Toast.notice("stream published success")
-        console.log("stream-published")
-      })
-      // Occurs when the remote stream is added.
-      rtc.client.on("stream-added", function (evt) {  
-        var remoteStream = evt.stream
-        var id = remoteStream.getId()
-        Toast.info("stream-added uid: " + id)
-        if (id !== rtc.params.uid) {
-          rtc.client.subscribe(remoteStream, function (err) {
-            console.log("stream subscribe failed", err)
-          })
-        }
-        console.log("stream-added remote-uid: ", id)
-      })
-      // Occurs when a user subscribes to a remote stream.
-      rtc.client.on("stream-subscribed", function (evt) {
-        var remoteStream = evt.stream
-        var id = remoteStream.getId()
-        rtc.remoteStreams.push(remoteStream)
-        addView(id)
-        remoteStream.play("remote_video_" + id)
-        Toast.info("stream-subscribed remote-uid: " + id)
-        console.log("stream-subscribed remote-uid: ", id)
-      })
-      // Occurs when the remote stream is removed; for example, a peer user calls Client.unpublish.
-      rtc.client.on("stream-removed", function (evt) {
-        var remoteStream = evt.stream
-        var id = remoteStream.getId()
-        Toast.info("stream-removed uid: " + id)
-        if(remoteStream.isPlaying()) {
-          remoteStream.stop()
-        }
-        rtc.remoteStreams = rtc.remoteStreams.filter(function (stream) {
-          return stream.getId() !== id
-        })
-        removeView(id)
-        console.log("stream-removed remote-uid: ", id)
-      })
-      rtc.client.on("onTokenPrivilegeWillExpire", function(){
-        // After requesting a new token
-        // rtc.client.renewToken(token);
-        Toast.info("onTokenPrivilegeWillExpire")
-        console.log("onTokenPrivilegeWillExpire")
-      })
-      rtc.client.on("onTokenPrivilegeDidExpire", function(){
-        // After requesting a new token
-        // client.renewToken(token);
-        Toast.info("onTokenPrivilegeDidExpire")
-        console.log("onTokenPrivilegeDidExpire")
-      })
-    }
-
-    /**
-      * rtc: rtc object
-      * option: {
-      *  mode: string, "live" | "rtc"
-      *  codec: string, "h264" | "vp8"
-      *  appID: string
-      *  channel: string, channel name
-      *  uid: number
-      *  token; string,
-      * }
-     **/
-    function join (rtc, option) {
-      if (rtc.joined) {
-        Toast.error("Your already joined")
-        return;
-      }
-
-      /**
-       * A class defining the properties of the config parameter in the createClient method.
-       * Note:
-       *    Ensure that you do not leave mode and codec as empty.
-       *    Ensure that you set these properties before calling Client.join.
-       *  You could find more detail here. https://docs.agora.io/en/Video/API%20Reference/web/interfaces/agorartc.clientconfig.html
-      **/
-      rtc.client = AgoraRTC.createClient({mode: option.mode, codec: option.codec})
-
-      rtc.params = option
-
-      // handle AgoraRTC client event
-      handleEvents(rtc)
-
-      // init client
-      rtc.client.init(option.appID, function () {
-        console.log("init success")
-
-        /**
-         * Joins an AgoraRTC Channel
-         * This method joins an AgoraRTC channel.
-         * Parameters
-         * tokenOrKey: string | null
-         *    Low security requirements: Pass null as the parameter value.
-         *    High security requirements: Pass the string of the Token or Channel Key as the parameter value. See Use Security Keys for details.
-         *  channel: string
-         *    A string that provides a unique channel name for the Agora session. The length must be within 64 bytes. Supported character scopes:
-         *    26 lowercase English letters a-z
-         *    26 uppercase English letters A-Z
-         *    10 numbers 0-9
-         *    Space
-         *    "!", "#", "$", "%", "&", "(", ")", "+", "-", ":", ";", "<", "=", ".", ">", "?", "@", "[", "]", "^", "_", "{", "}", "|", "~", ","
-         *  uid: number | null
-         *    The user ID, an integer. Ensure this ID is unique. If you set the uid to null, the server assigns one and returns it in the onSuccess callback.
-         *   Note:
-         *      All users in the same channel should have the same type (number or string) of uid.
-         *      If you use a number as the user ID, it should be a 32-bit unsigned integer with a value ranging from 0 to (232-1).
-        **/
-        rtc.client.join(option.token ? option.token : null, option.channel, option.uid ? +option.uid : null, function (uid) {
-          Toast.notice("join channel: " + option.channel + " success, uid: " + uid)
-          console.log("join channel: " + option.channel + " success, uid: " + uid)
-          rtc.joined = true
-
-          rtc.params.uid = uid
-
-          // create local stream
-          rtc.localStream = AgoraRTC.createStream({
-            streamID: rtc.params.uid,
-            audio: true,
-            video: true,
-            screen: false,
-            microphoneId: option.microphoneId,
-            cameraId: option.cameraId
-          })
-
-          // initialize local stream. Callback function executed after intitialization is done
-          rtc.localStream.init(function () {
-            console.log("init local stream success")
-            // play stream with html element id "local_stream"
-            rtc.localStream.play("local_stream")
-
-            // publish local stream
-            publish(rtc)
-          }, function (err)  {
-            Toast.error("stream init failed, please open console see more detail")
-            console.error("init local stream failed ", err)
-          })
-        }, function(err) {
-          Toast.error("client join failed, please open console see more detail")
-          console.error("client join failed", err)
-        })
-      }, (err) => {
-        Toast.error("client init failed, please open console see more detail")
-        console.error(err)
-      })
-    }
-
-    function publish (rtc) {
-      if (!rtc.client) {
-        Toast.error("Please Join Room First")
-        return
-      }
-      if (rtc.published) {
-        Toast.error("Your already published")
-        return
-      }
-      var oldState = rtc.published
-
-      // publish localStream
-      rtc.client.publish(rtc.localStream, function (err) {
-        rtc.published = oldState
-        console.log("publish failed")
-        Toast.error("publish failed")
-        console.error(err)
-      })
-      Toast.info("publish")
-      rtc.published = true
-    }
-
-    function unpublish (rtc) {
-      if (!rtc.client) {
-        Toast.error("Please Join Room First")
-        return
-      }
-      if (!rtc.published) {
-        Toast.error("Your didn't publish")
-        return
-      }
-      var oldState = rtc.published
-      rtc.client.unpublish(rtc.localStream, function (err) {
-        rtc.published = oldState
-        console.log("unpublish failed")
-        Toast.error("unpublish failed")
-        console.error(err)
-      })
-      Toast.info("unpublish")
-      rtc.published = false
-    }
-
-    function leave (rtc) {
-      if (!rtc.client) {
-        Toast.error("Please Join First!")
-        return
-      }
-      if (!rtc.joined) {
-        Toast.error("You are not in channel")
-        return
-      }
-      /**
-       * Leaves an AgoraRTC Channel
-       * This method enables a user to leave a channel.
-       **/
-      rtc.client.leave(function () {
-        // stop stream
-        if(rtc.localStream.isPlaying()) {
-          rtc.localStream.stop()
-        }
-        // close stream
-        rtc.localStream.close()
-        for (let i = 0; i < rtc.remoteStreams.length; i++) {
-          var stream = rtc.remoteStreams.shift()
-          var id = stream.getId()
-          if(stream.isPlaying()) {
-            stream.stop()
-          }
-          removeView(id)
-        }
-        rtc.localStream = null
-        rtc.remoteStreams = []
-        rtc.client = null
-        console.log("client leaves channel success")
-        rtc.published = false
-        rtc.joined = false
-        Toast.notice("leave success")
-      }, function (err) {
-        console.log("channel leave failed")
-        Toast.error("leave success")
-        console.error(err)
-      })
-    }
-
-    // This function automatically executes when a document is ready.
-    $(function () {
-      // This will fetch all the devices and will populate the UI for every device. (Audio and Video)
-      getDevices(function (devices) {
-        devices.audios.forEach(function (audio) {
-          $("<option/>", {
-            value: audio.value,
-            text: audio.name,
-          }).appendTo("#microphoneId")
-        })
-        devices.videos.forEach(function (video) {
-          $("<option/>", {
-            value: video.value,
-            text: video.name,
-          }).appendTo("#cameraId")
-        })
-        // To populate UI with different camera resolutions
-        resolutions.forEach(function (resolution) {
-          $("<option/>", {
-            value: resolution.value,
-            text: resolution.name
-          }).appendTo("#cameraResolution")
-        })
-        M.AutoInit()
-      })
-
-      var fields = ["appID", "channel"]
-
-      // This will start the join functions with all the configuration selected by the user.
-      $("#join").on("click", function (e) {
-        console.log("join")
-        e.preventDefault();
-        var params = serializeformData(); // Data is feteched and serilized from the form element.
-        if (validator(params, fields)) {
-          join(rtc, params)
-        }
-      })
-      // This publishes the video feed to Agora
-      $("#publish").on("click", function (e) {
-        console.log("publish")
-        e.preventDefault()
-        var params = serializeformData()
-        if (validator(params, fields)) {
-          publish(rtc)
-        }
-      });
-      // Unpublishes the video feed from Agora
-      $("#unpublish").on("click", function (e) {
-        console.log("unpublish")
-        e.preventDefault()
-        var params = serializeformData()
-        if (validator(params, fields)) {
-          unpublish(rtc)
-        }
-      });
-      // Leeaves the chanenl if someone clicks the leave button
-      $("#leave").on("click", function (e) {
-        console.log("leave")
-        e.preventDefault()
-        var params = serializeformData()
-        if (validator(params, fields)) {
-          leave(rtc)
-        }
-      })
-    })
-  </script>
+        // Handle page unload
+        window.addEventListener('beforeunload', () => {
+            if (window.videoCamera && window.videoCamera.stream) {
+                window.videoCamera.stream.getTracks().forEach(track => track.stop());
+            }
+        });
+    </script>
+</body>
 </html>
