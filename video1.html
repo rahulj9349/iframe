@@ -6,13 +6,15 @@
   <script src="https://download.agora.io/sdk/release/AgoraRTC_N.js"></script>
   <style>
     body { font-family: sans-serif; padding: 20px; }
-    .video-box { width: 320px; height: 240px; background: #000; margin-top: 10px; }
+    .video-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+    .video-box { width: 320px; height: 240px; background: #000; position: relative; }
     video { width: 100%; height: 100%; object-fit: cover; }
     button { margin-right: 10px; margin-top: 10px; }
+    .label { position: absolute; bottom: 4px; left: 4px; background: rgba(0,0,0,0.6); color: white; padding: 2px 6px; font-size: 12px; }
   </style>
 </head>
 <body>
-  <h2>Join Agora Meeting</h2>
+  <h2>Agora Video Call (Admin + Participants)</h2>
 
   <label>App ID:</label><br>
   <input id="appId" value="af48fc25ef704f879eb295ee2fa2a7f7" /><br><br>
@@ -33,8 +35,13 @@
     <button onclick="toggleAudio()">🎤 Toggle Audio</button>
   </div>
 
-  <div id="local-video" class="video-box">
-    <div id="local-player" style="width: 100%; height: 100%;"></div>
+  <h3>Video Grid</h3>
+  <div id="video-grid" class="video-grid">
+    <div id="local-player-box" class="video-box">
+      <div class="label">👤 Admin (You)</div>
+      <div id="local-player"></div>
+    </div>
+    <!-- Remote videos will append here -->
   </div>
 
   <script>
@@ -49,23 +56,51 @@
 
       try {
         client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+
+        // 🔁 Event: When a remote user publishes
+        client.on("user-published", async (user, mediaType) => {
+          await client.subscribe(user, mediaType);
+          console.log(`📡 Subscribed to ${mediaType} from UID ${user.uid}`);
+
+          let remoteBox = document.getElementById(`remote-${user.uid}`);
+          if (!remoteBox) {
+            remoteBox = document.createElement("div");
+            remoteBox.id = `remote-${user.uid}`;
+            remoteBox.className = "video-box";
+            remoteBox.innerHTML = `<div class="label">👥 UID ${user.uid}</div>`;
+            document.getElementById("video-grid").appendChild(remoteBox);
+          }
+
+          if (mediaType === "video") {
+            user.videoTrack.play(remoteBox);
+          }
+          if (mediaType === "audio") {
+            user.audioTrack.play();
+          }
+        });
+
+        client.on("user-unpublished", (user, mediaType) => {
+          console.log(`🚫 ${user.uid} unpublished ${mediaType}`);
+          if (mediaType === "video") {
+            const remoteBox = document.getElementById(`remote-${user.uid}`);
+            if (remoteBox) remoteBox.remove();
+          }
+        });
+
+        // Join channel
         await client.join(appId, channel, token, uid);
         console.log("✅ Joined channel", channel);
 
         [localAudioTrack, localVideoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();
-        console.log("🎥 Video Track:", localVideoTrack);
-        console.log("🎤 Audio Track:", localAudioTrack);
 
-        // Play local video
         localVideoTrack.play("local-player");
-
         await client.publish([localAudioTrack, localVideoTrack]);
         console.log("🚀 Published local tracks");
 
         document.getElementById('controls').style.display = 'block';
       } catch (err) {
-        console.error("❌ Failed to join or publish:", err);
-        alert("Failed to join or publish. Check console.");
+        console.error("❌ Join error:", err);
+        alert("Failed to join. Check console.");
       }
     }
 
