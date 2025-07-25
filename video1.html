@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Agora Admin + Participants Video Call</title>
+  <title>Agora Admin + Participants Video Call new</title>
   <script src="https://download.agora.io/sdk/release/AgoraRTC_N.js"></script>
   <style>
     body { font-family: sans-serif; padding: 20px; }
@@ -92,7 +92,13 @@
         [localAudioTrack, localVideoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();
 
         // Play your own video
-        localVideoTrack.play("local-player");
+        setTimeout(() => {
+          localVideoTrack.play("local-player").then(() => {
+            console.log("🎥 Local video playing");
+          }).catch(err => {
+            console.error("❌ Failed to play local video:", err);
+          });
+        }, 500);
 
         // Publish audio + video so others can see/hear you
         await client.publish([localAudioTrack, localVideoTrack]);
