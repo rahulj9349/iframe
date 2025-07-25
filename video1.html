@@ -2,33 +2,33 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Agora Meeting with Video/Audio</title>
+  <title>Agora Admin + Participants Video Call</title>
   <script src="https://download.agora.io/sdk/release/AgoraRTC_N.js"></script>
   <style>
     body { font-family: sans-serif; padding: 20px; }
     .video-grid { display: flex; flex-wrap: wrap; gap: 10px; }
     .video-box { width: 320px; height: 240px; background: #000; position: relative; }
-    video { width: 100%; height: 100%; object-fit: cover; }
-    button { margin-right: 10px; margin-top: 10px; }
     .label { position: absolute; bottom: 4px; left: 4px; background: rgba(0,0,0,0.6); color: white; padding: 2px 6px; font-size: 12px; }
+    #controls { margin-top: 10px; }
+    video { width: 100%; height: 100%; object-fit: cover; }
   </style>
 </head>
 <body>
-  <h2>Agora Video Call (Admin + Participants)</h2>
+  <h2>Agora Call: Admin + Participants</h2>
 
   <label>App ID:</label><br>
   <input id="appId" value="af48fc25ef704f879eb295ee2fa2a7f7" /><br><br>
 
   <label>UID:</label><br>
-  <input id="uid" value="43" /><br><br>
+  <input id="uid" value="842" /><br><br>
 
   <label>Channel Name:</label><br>
-  <input id="channel" value="VC_KAU4_1752239745_43" /><br><br>
+  <input id="channel" value="VC_KAU4_1753428978_842" /><br><br>
 
   <label>Video Token:</label><br>
-  <textarea id="token" rows="3" cols="60">007eJxSYOBqfLi3VNfhoeybZZuvdf/w051b92TizpezpXv1PBsn2HcpMCSmmVikJRuZpqaZG5ikWZhbpiYZWZqmphqlJRolmqeZN/IVZjQEMjJIrtVlZWRgZGBhYGQA8ZnAJDOYZAGTogxhzvHejqEm8YbmpkZGxpbmJqbxJsZMDCbGgAAAAP//1mYm2A==</textarea><br><br>
+  <textarea id="token" rows="3" cols="60">007eJxSYOCp5l9Y9eTXhr2TrG9uZ2F9b9h0pEY8/5HIhuV/33OcVtBXYEhMM7FISzYyTU0zNzBJszC3TE0ysjRNTTVKSzRKNE8z/2zcnNEQyMjwhMWPmZGBkYGFgZEBxGcCk8xgkgVMijGEOcd7O4aaxBuamxqbGFlYmlvEW5gYMTNYmBgBAgAA//8Diid4</textarea><br><br>
 
-  <button onclick="joinMeeting()">Join Meeting</button>
+  <button onclick="joinMeeting()">🔗 Join Meeting</button>
 
   <div id="controls" style="display:none;">
     <button onclick="toggleVideo()">🎥 Toggle Video</button>
@@ -38,10 +38,9 @@
   <h3>Video Grid</h3>
   <div id="video-grid" class="video-grid">
     <div id="local-player-box" class="video-box">
-      <div class="label">👤 Admin (You)</div>
+      <div class="label">👤 You</div>
       <div id="local-player"></div>
     </div>
-    <!-- Remote videos will append here -->
   </div>
 
   <script>
@@ -54,53 +53,55 @@
       const channel = document.getElementById('channel').value.trim();
       const token = document.getElementById('token').value.trim();
 
+      client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+
+      // Remote user joins and publishes
+      client.on("user-published", async (user, mediaType) => {
+        await client.subscribe(user, mediaType);
+        console.log(`📡 Subscribed to ${mediaType} from UID ${user.uid}`);
+
+        let remoteBox = document.getElementById(`remote-${user.uid}`);
+        if (!remoteBox) {
+          remoteBox = document.createElement("div");
+          remoteBox.id = `remote-${user.uid}`;
+          remoteBox.className = "video-box";
+          remoteBox.innerHTML = `<div class="label">👥 UID ${user.uid}</div>`;
+          document.getElementById("video-grid").appendChild(remoteBox);
+        }
+
+        if (mediaType === "video") {
+          user.videoTrack.play(remoteBox);
+        }
+
+        if (mediaType === "audio") {
+          user.audioTrack.play(); // No container needed for audio
+        }
+      });
+
+      // Remote user unpublishes
+      client.on("user-unpublished", (user, mediaType) => {
+        console.log(`❌ ${user.uid} unpublished ${mediaType}`);
+        const remoteBox = document.getElementById(`remote-${user.uid}`);
+        if (remoteBox) remoteBox.remove();
+      });
+
       try {
-        client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
-
-        // 🔁 Event: When a remote user publishes
-        client.on("user-published", async (user, mediaType) => {
-          await client.subscribe(user, mediaType);
-          console.log(`📡 Subscribed to ${mediaType} from UID ${user.uid}`);
-
-          let remoteBox = document.getElementById(`remote-${user.uid}`);
-          if (!remoteBox) {
-            remoteBox = document.createElement("div");
-            remoteBox.id = `remote-${user.uid}`;
-            remoteBox.className = "video-box";
-            remoteBox.innerHTML = `<div class="label">👥 UID ${user.uid}</div>`;
-            document.getElementById("video-grid").appendChild(remoteBox);
-          }
-
-          if (mediaType === "video") {
-            user.videoTrack.play(remoteBox);
-          }
-          if (mediaType === "audio") {
-            user.audioTrack.play();
-          }
-        });
-
-        client.on("user-unpublished", (user, mediaType) => {
-          console.log(`🚫 ${user.uid} unpublished ${mediaType}`);
-          if (mediaType === "video") {
-            const remoteBox = document.getElementById(`remote-${user.uid}`);
-            if (remoteBox) remoteBox.remove();
-          }
-        });
-
-        // Join channel
         await client.join(appId, channel, token, uid);
-        console.log("✅ Joined channel", channel);
+        console.log("✅ Joined channel:", channel);
 
         [localAudioTrack, localVideoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();
 
+        // Play your own video
         localVideoTrack.play("local-player");
+
+        // Publish audio + video so others can see/hear you
         await client.publish([localAudioTrack, localVideoTrack]);
-        console.log("🚀 Published local tracks");
+        console.log("🚀 Published local audio & video");
 
         document.getElementById('controls').style.display = 'block';
       } catch (err) {
         console.error("❌ Join error:", err);
-        alert("Failed to join. Check console.");
+        alert("Error joining: Check console.");
       }
     }
 
@@ -108,14 +109,14 @@
       if (!localVideoTrack) return;
       videoEnabled = !videoEnabled;
       localVideoTrack.setEnabled(videoEnabled);
-      alert(videoEnabled ? "🎥 Video resumed" : "⛔ Video stopped");
+      alert(videoEnabled ? "🎥 Video ON" : "⛔ Video OFF");
     }
 
     function toggleAudio() {
       if (!localAudioTrack) return;
       audioEnabled = !audioEnabled;
       localAudioTrack.setEnabled(audioEnabled);
-      alert(audioEnabled ? "🎤 Mic unmuted" : "🔇 Mic muted");
+      alert(audioEnabled ? "🎤 Mic ON" : "🔇 Mic OFF");
     }
   </script>
 </body>
