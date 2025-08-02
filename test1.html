@@ -59,27 +59,37 @@
   </div>
 
   <!-- ✅ JavaScript to dynamically add/remove padding-bottom -->
-  <script>
-    const addPadding = () => {
-      document.body.style.paddingBottom = '300px';
-    };
+   <script>
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-    const removePadding = () => {
-      setTimeout(() => {
+    function addKeyboardSpace(el) {
+      if (isMobile) {
+        // Scroll the focused element into view
+        setTimeout(() => {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 200);
+        // Add bottom space to avoid keyboard overlap
+        document.body.style.paddingBottom = '300px';
+      }
+    }
+
+    function removeKeyboardSpace() {
+      if (isMobile) {
         document.body.style.paddingBottom = '0px';
-      }, 400); // delay helps with keyboard animation
-    };
+      }
+    }
 
-    // Attach to all input, textarea, select elements
+    // Apply listeners to inputs, textareas, and selects
     document.querySelectorAll('input, textarea, select').forEach(el => {
-      el.addEventListener('focus', addPadding);
-      el.addEventListener('blur', removePadding);
+      el.addEventListener('focus', () => addKeyboardSpace(el));
+      el.addEventListener('blur', removeKeyboardSpace);
     });
 
-    // Extra fallback for taps outside inputs (in case blur doesn't fire)
+    // Tap outside input to dismiss keyboard
     document.body.addEventListener('touchstart', (e) => {
       if (!e.target.closest('input, textarea, select')) {
-        removePadding();
+        removeKeyboardSpace();
+        document.activeElement?.blur(); // Dismiss keyboard
       }
     });
   </script>
