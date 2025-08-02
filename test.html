@@ -10,14 +10,14 @@
   />
   <style>
     body {
-      padding-bottom: 150px; /* extra space for keyboard overlap */
+      padding-bottom: 300px; /* More space for keyboard to avoid hiding last input */
     }
   </style>
 </head>
 <body>
 
   <div class="container mt-5">
-    <h3 class="mb-4">User Information 1</h3>
+    <h3 class="mb-4">User Information 2</h3>
     <form>
       <div class="mb-3">
         <label for="firstName" class="form-label">First Name</label>
@@ -59,12 +59,12 @@
   </div>
 
   <script>
-    // Scroll focused input into view (for Android keyboard)
+    // Android keyboard scroll fix
     document.querySelectorAll('.auto-scroll').forEach(input => {
       input.addEventListener('focus', () => {
         setTimeout(() => {
           input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 300); // Wait for keyboard to open
+        }, 300); // allow keyboard to fully open
       });
     });
   </script>
