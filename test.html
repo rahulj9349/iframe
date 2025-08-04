@@ -18,7 +18,7 @@
     }
 
     #iframeWrapper {
-      height: 450px; /* Example: 550 device height - 50 header - 50 footer */
+      height: 450px; /* 550 - header (50) - footer (50) */
       overflow: auto;
     }
 
@@ -42,10 +42,8 @@
   <script>
     const iframe = document.getElementById("myIframe");
 
-    // Listen for messages from iframe
     window.addEventListener("message", (event) => {
       const data = event.data;
-
       if (data?.type === "childHeight") {
         iframe.style.height = data.height + "px";
       }
