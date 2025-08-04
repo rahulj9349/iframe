@@ -94,19 +94,21 @@
     }
 
    function openModal() {
-  // ✅ Capture scroll position **before** locking or changing DOM
-  scrollPosition = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+  // ✅ Get scroll position accurately
+  scrollPosition = document.documentElement.scrollTop || document.body.scrollTop || 0;
+  console.log("Captured Scroll Position:", scrollPosition);
 
-  // Lock scroll without layout shift
+  // ✅ Lock scroll visually
   document.documentElement.classList.add('lock-scroll');
   document.body.classList.add('lock-scroll');
 
-  // Set iframe height to 100vh
+  // ✅ Ask parent to shrink iframe height
   sendHeightToParent('100vh');
 
-  // Show modal
+  // ✅ Show modal
   document.getElementById('modal').classList.add('active');
 }
+
 
 
     function closeModal() {
