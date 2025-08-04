@@ -1,25 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Parent Page</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    body, html {
+    html, body {
       margin: 0;
       padding: 0;
     }
+
     header, footer {
       height: 50px;
-      background: #222;
-      color: #fff;
-      line-height: 50px;
+      background: #333;
+      color: white;
       text-align: center;
+      line-height: 50px;
     }
-    #iframeContainer {
-      height: 450px; /* 550px total - header + footer */
-      overflow: hidden;
-    }
+
     iframe {
       width: 100%;
       border: none;
@@ -29,24 +27,19 @@
 </head>
 <body>
   <header>Parent Header</header>
-  <div id="iframeContainer">
-    <iframe id="myIframe" src="test1.html"></iframe>
-  </div>
-  <footer>Parent Footer 1</footer>
+
+  <iframe id="childIframe" src="test1.html"></iframe>
+
+  <footer>Parent Footer</footer>
 
   <script>
-    const iframe = document.getElementById("myIframe");
+    const iframe = document.getElementById("childIframe");
 
     window.addEventListener("message", (event) => {
       const data = event.data;
 
       if (data.type === "setHeight") {
         iframe.style.height = data.height;
-      }
-
-      // Optional: Scroll iframe wrapper to keep current point in view
-      if (data.type === "scrollLock") {
-        document.getElementById("iframeContainer").scrollTop = data.scrollTop;
       }
     });
   </script>
