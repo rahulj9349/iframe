@@ -18,11 +18,13 @@
     }
 
     /* Freeze iframe scroll when modal is open */
-    body.modal-open {
-      overflow: hidden !important;
-      position: fixed;
-      width: 100%;
-    }
+   body.modal-open {
+  overflow: hidden !important;
+  position: fixed;
+  width: 100%;
+  top: var(--scroll-top, 0); /* dynamically set */
+}
+
 
     /* Scrollable modal inside iframe */
     .modal-dialog {
@@ -76,43 +78,48 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-  <script>
-    let modal;
+ <script>
+  let scrollYBeforeModal = 0;
+  let modal;
 
-    function sendHeight() {
-      const height = document.documentElement.scrollHeight;
-      window.parent.postMessage({ type: 'childHeight', height }, '*');
+  function sendHeight() {
+    const height = document.documentElement.scrollHeight;
+    window.parent.postMessage({ type: 'childHeight', height }, '*');
+  }
+
+  function openPopup() {
+    scrollYBeforeModal = window.scrollY;
+
+    // Freeze scroll visually by shifting body upward
+    document.body.style.setProperty('--scroll-top', `-${scrollYBeforeModal}px`);
+
+    modal = new bootstrap.Modal(document.getElementById('popupModal'));
+    modal.show();
+
+    // Notify parent to change iframe height
+    window.parent.postMessage({ type: 'modalOpened' }, '*');
+  }
+
+  // On modal close
+  document.getElementById('popupModal').addEventListener('hidden.bs.modal', () => {
+    // Reset fixed scroll shift
+    document.body.style.removeProperty('--scroll-top');
+
+    // Restore scroll position
+    window.scrollTo({ top: scrollYBeforeModal, behavior: 'instant' });
+
+    window.parent.postMessage({ type: 'modalClosed' }, '*');
+  });
+
+  // Handle parent asking for height
+  window.addEventListener('message', function (event) {
+    if (event.data?.type === 'getHeight') {
+      sendHeight();
     }
+  });
 
-    function openPopup() {
-      modal = new bootstrap.Modal(document.getElementById('popupModal'));
-      modal.show();
+  window.addEventListener('load', sendHeight);
+</script>
 
-      const scrollTop = window.scrollY;
-
-      // Notify parent that modal opened
-      window.parent.postMessage({ type: 'modalOpened', scrollTop }, '*');
-
-      // Restore scroll after Bootstrap layout shift
-      setTimeout(() => {
-        window.scrollTo({ top: scrollTop, behavior: 'instant' });
-      }, 100);
-    }
-
-    // When modal is hidden, notify parent
-    document.getElementById('popupModal').addEventListener('hidden.bs.modal', () => {
-      window.parent.postMessage({ type: 'modalClosed' }, '*');
-    });
-
-    // Parent can request height
-    window.addEventListener('message', function (event) {
-      if (event.data?.type === 'getHeight') {
-        sendHeight();
-      }
-    });
-
-    // Send initial height
-    window.addEventListener('load', sendHeight);
-  </script>
 </body>
 </html>
