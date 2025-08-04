@@ -63,16 +63,16 @@
 <body>
 
   <!-- Sections -->
-  <div class="section">Section 1 <button onclick="openModal()">Open Modal</button></div>
-  <div class="section">Section 2 <button onclick="openModal()">Open Modal</button></div>
-  <div class="section">Section 3 <button onclick="openModal()">Open Modal</button></div>
-  <div class="section">Section 4 <button onclick="openModal()">Open Modal</button></div>
-  <div class="section">Section 5 <button onclick="openModal()">Open Modal</button></div>
-  <div class="section">Section 6 <button onclick="openModal()">Open Modal</button></div>
-  <div class="section">Section 7 <button onclick="openModal()">Open Modal</button></div>
-  <div class="section">Section 8 <button onclick="openModal()">Open Modal</button></div>
-  <div class="section">Section 9 <button onclick="openModal()">Open Modal</button></div>
-  <div class="section">Section 10 <button onclick="openModal()">Open Modal</button></div>
+  <div class="section">Section 1 <button onclick="console.log('ScrollY:', window.scrollY); openModal()">Open Modal</button></div>
+  <div class="section">Section 2 <button onclick="console.log('ScrollY:', window.scrollY); openModal()">Open Modal</button></div>
+  <div class="section">Section 3 <button onclick="console.log('ScrollY:', window.scrollY); openModal()">Open Modal</button></div>
+  <div class="section">Section 4 <button onclick="console.log('ScrollY:', window.scrollY); openModal()">Open Modal</button></div>
+  <div class="section">Section 5 <button onclick="console.log('ScrollY:', window.scrollY); openModal()">Open Modal</button></div>
+  <div class="section">Section 6 <button onclick="console.log('ScrollY:', window.scrollY); openModal()">Open Modal</button></div>
+  <div class="section">Section 7 <button onclick="console.log('ScrollY:', window.scrollY); openModal()">Open Modal</button></div>
+  <div class="section">Section 8 <button onclick="console.log('ScrollY:', window.scrollY); openModal()">Open Modal</button></div>
+  <div class="section">Section 9 <button onclick="console.log('ScrollY:', window.scrollY); openModal()">Open Modal</button></div>
+  <div class="section">Section 10 <button onclick="console.log('ScrollY:', window.scrollY); openModal()">Open Modal</button></div>
 
   <!-- Modal -->
   <div class="modal-backdrop" id="modal">
@@ -93,21 +93,21 @@
       window.parent.postMessage({ type: 'setHeight', height }, '*');
     }
 
-    function openModal() {
-      // Save scroll position
-      scrollPosition = window.scrollY;
+   function openModal() {
+  // ✅ Capture scroll position **before** locking or changing DOM
+  scrollPosition = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
 
-      // Lock scroll without triggering layout shift
-      document.documentElement.classList.add('lock-scroll');
-      document.body.classList.add('lock-scroll');
+  // Lock scroll without layout shift
+  document.documentElement.classList.add('lock-scroll');
+  document.body.classList.add('lock-scroll');
 
-      // Set iframe height to 100vh
-      sendHeightToParent('100vh');
+  // Set iframe height to 100vh
+  sendHeightToParent('100vh');
 
-      // Show modal
-console.log('scrollPositionbefore modal',scrollPosition)
-      document.getElementById('modal').classList.add('active');
-    }
+  // Show modal
+  document.getElementById('modal').classList.add('active');
+}
+
 
     function closeModal() {
       // Unlock scroll
