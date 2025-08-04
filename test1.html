@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Child</title>
+  <meta charset="UTF-8">
+  <title>Force Scroll to 1200px on Close</title>
   <style>
     body {
       margin: 0;
@@ -10,27 +11,31 @@
 
     .section {
       height: 300px;
+      padding: 20px;
       border-bottom: 1px solid #ccc;
-      padding: 10px;
     }
 
     .modal {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.6);
+      background: rgba(0,0,0,0.5);
       z-index: 9999;
       justify-content: center;
       align-items: center;
     }
 
+    .modal.active {
+      display: flex;
+    }
+
     .modal-content {
-      background: #fff;
+      background: white;
       padding: 20px;
       width: 80%;
       max-height: 80vh;
       overflow-y: auto;
-      border-radius: 8px;
+      border-radius: 10px;
     }
 
     body.lock-scroll {
@@ -55,30 +60,29 @@
   <!-- Modal -->
   <div class="modal" id="popup">
     <div class="modal-content">
-      <button onclick="closeModal()">Close Modal</button>
-      <p>This is modal content</p>
-      <div style="height: 300px;"></div>
+      <div style="text-align: right;"><button onclick="closeModal()">×</button></div>
+      <h2>Modal Content</h2>
+      <p>This is the modal popup.</p>
+      <div style="height: 200px;"></div>
     </div>
   </div>
 
   <script>
-    let scrollYBeforeModal = 0;
-
     function openModal() {
-      scrollYBeforeModal = window.scrollY;
       document.body.classList.add('lock-scroll');
-      document.getElementById('popup').style.display = 'flex';
+      document.getElementById('popup').classList.add('active');
     }
 
     function closeModal() {
+      document.getElementById('popup').classList.remove('active');
       document.body.classList.remove('lock-scroll');
-      document.getElementById('popup').style.display = 'none';
 
-      // Restore scroll
+      // ✅ Scroll to 1200px immediately
       setTimeout(() => {
-        window.scrollTo(0, scrollYBeforeModal);
+        window.scrollTo({ top: 1200, behavior: 'auto' });
       }, 0);
     }
   </script>
+
 </body>
 </html>
