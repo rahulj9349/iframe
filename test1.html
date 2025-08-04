@@ -83,31 +83,33 @@
     }
 
     function openModal() {
-      scrollY = window.scrollY;
+  scrollY = window.scrollY;
 
-      // Lock scroll after current frame
-      requestAnimationFrame(() => {
-        document.body.classList.add('scroll-locked');
-        document.body.style.top = `-${scrollY}px`;
-      });
+  // Open modal first
+  const modal = new bootstrap.Modal(document.getElementById('popupModal'));
+  modal.show();
 
-      // Notify parent to set iframe height to 100vh
-      sendHeightToParent('100vh');
+  // Wait for modal to be fully shown, THEN lock scroll
+  document.getElementById('popupModal').addEventListener('shown.bs.modal', () => {
+    // Lock body at current scroll
+    document.body.classList.add('scroll-locked');
+    document.body.style.top = `-${scrollY}px`;
 
-      const modal = new bootstrap.Modal(document.getElementById('popupModal'));
-      modal.show();
-    }
+    // Force iframe height to full screen
+    sendHeightToParent('100vh');
+  }, { once: true }); // Attach this listener only once
+}
+
 
     document.getElementById('popupModal').addEventListener('hidden.bs.modal', () => {
-      // Restore scroll state
-      document.body.classList.remove('scroll-locked');
-      document.body.style.top = '';
-      window.scrollTo(0, scrollY);
+  document.body.classList.remove('scroll-locked');
+  document.body.style.top = '';
+  window.scrollTo(0, scrollY);
 
-      // Restore full iframe height
-      const fullHeight = document.documentElement.scrollHeight;
-      sendHeightToParent(fullHeight + 'px');
-    });
+  const fullHeight = document.documentElement.scrollHeight;
+  sendHeightToParent(fullHeight + 'px');
+});
+
 
     window.addEventListener('load', () => {
       const fullHeight = document.documentElement.scrollHeight;
