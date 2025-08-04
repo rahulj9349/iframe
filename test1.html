@@ -2,32 +2,45 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Iframe Modal</title>
-  <!-- Bootstrap 5 CSS -->
+  <title>Iframe with Multiple Sections</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .section {
+      height: 200px;
+      padding: 20px;
+      border: 1px solid #ccc;
+      margin-bottom: 10px;
+      background-color: #f8f9fa;
+    }
+  </style>
 </head>
 <body>
-  <h3>Iframe Content</h3>
 
-  <!-- Modal Container -->
+  <h3 class="text-center">Iframe Content with Multiple Sections</h3>
+
+  <!-- Modal container (appends modal DOM here) -->
   <div id="modal-container"></div>
 
-  <!-- Button to Trigger Modal -->
-  <button class="btn btn-primary" onclick="openModal()">Open Modal</button>
+  <!-- 10 sections with buttons -->
+  <div class="container">
+    <div id="sections">
+      <!-- Sections will be added by JS -->
+    </div>
+  </div>
 
   <!-- Modal HTML -->
   <div class="modal fade" id="myModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Iframe Modal</h5>
+          <h5 class="modal-title" id="modalTitle">Modal</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
-        <div class="modal-body">
-          This modal is rendered inside the iframe!
+        <div class="modal-body" id="modalBody">
+          Modal Content
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         </div>
       </div>
     </div>
@@ -37,11 +50,29 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
-    function openModal() {
-      var myModal = new bootstrap.Modal(document.getElementById('myModal'), {
-        container: '#modal-container' // ensures the modal is appended inside modal-container
+    // Generate 10 sections
+    const sectionsContainer = document.getElementById('sections');
+    for (let i = 1; i <= 10; i++) {
+      const section = document.createElement('div');
+      section.className = 'section';
+      section.innerHTML = `
+        <h5>Section ${i}</h5>
+        <p>This is section ${i} with a height of 200px.</p>
+        <button class="btn btn-primary" onclick="openModal(${i})">Open Modal</button>
+      `;
+      sectionsContainer.appendChild(section);
+    }
+
+    function openModal(sectionNumber) {
+      // Set modal content dynamically
+      document.getElementById('modalTitle').innerText = `Modal from Section ${sectionNumber}`;
+      document.getElementById('modalBody').innerText = `This modal was opened from section ${sectionNumber}.`;
+
+      // Show modal in modal-container
+      const modal = new bootstrap.Modal(document.getElementById('myModal'), {
+        container: '#modal-container'
       });
-      myModal.show();
+      modal.show();
     }
   </script>
 </body>
