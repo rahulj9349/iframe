@@ -21,13 +21,22 @@
       background: #f9f9f9;
     }
 
-    body.modal-scroll-lock {
-      position: fixed !important;
-      width: 100%;
-      overflow: hidden !important;
+    /* Lock body scroll and height */
+    body.lock-scroll {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 100vh;
+      overflow: hidden;
     }
 
-    /* ✅ Force modal to center in iframe viewport */
+    /* Keep layout in place visually */
+    .body-wrapper {
+      transition: transform 0.3s ease;
+    }
+
+    /* Center modal in visible area */
     .modal.show {
       display: flex !important;
       align-items: center !important;
@@ -50,38 +59,34 @@
       overflow-y: auto;
       max-height: calc(100vh - 120px);
     }
-    body.lock-viewport {
-  height: 100vh;
-  overflow: hidden;
-}
-
   </style>
 </head>
-
 <body>
-  <!-- 10 Sections -->
-  <div class="section">Section 1 <button class="btn btn-primary" onclick="openPopup()">Open Modal</button></div>
-  <div class="section">Section 2 <button class="btn btn-primary" onclick="openPopup()">Open Modal</button></div>
-  <div class="section">Section 3 <button class="btn btn-primary" onclick="openPopup()">Open Modal</button></div>
-  <div class="section">Section 4 <button class="btn btn-primary" onclick="openPopup()">Open Modal</button></div>
-  <div class="section">Section 5 <button class="btn btn-primary" onclick="openPopup()">Open Modal</button></div>
-  <div class="section">Section 6 <button class="btn btn-primary" onclick="openPopup()">Open Modal</button></div>
-  <div class="section">Section 7 <button class="btn btn-primary" onclick="openPopup()">Open Modal</button></div>
-  <div class="section">Section 8 <button class="btn btn-primary" onclick="openPopup()">Open Modal</button></div>
-  <div class="section">Section 9 <button class="btn btn-primary" onclick="openPopup()">Open Modal</button></div>
-  <div class="section">Section 10 <button class="btn btn-primary" onclick="openPopup()">Open Modal</button></div>
+  <!-- Wrapper to handle transform freeze effect -->
+  <div class="body-wrapper" id="bodyWrapper">
+    <div class="section">Section 1 <button class="btn btn-primary" onclick="openPopup()">Open Modal</button></div>
+    <div class="section">Section 2 <button class="btn btn-primary" onclick="openPopup()">Open Modal</button></div>
+    <div class="section">Section 3 <button class="btn btn-primary" onclick="openPopup()">Open Modal</button></div>
+    <div class="section">Section 4 <button class="btn btn-primary" onclick="openPopup()">Open Modal</button></div>
+    <div class="section">Section 5 <button class="btn btn-primary" onclick="openPopup()">Open Modal</button></div>
+    <div class="section">Section 6 <button class="btn btn-primary" onclick="openPopup()">Open Modal</button></div>
+    <div class="section">Section 7 <button class="btn btn-primary" onclick="openPopup()">Open Modal</button></div>
+    <div class="section">Section 8 <button class="btn btn-primary" onclick="openPopup()">Open Modal</button></div>
+    <div class="section">Section 9 <button class="btn btn-primary" onclick="openPopup()">Open Modal</button></div>
+    <div class="section">Section 10 <button class="btn btn-primary" onclick="openPopup()">Open Modal</button></div>
+  </div>
 
   <!-- Modal -->
   <div class="modal fade" id="popupModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Centered Modal</h5>
+          <h5 class="modal-title">Popup Modal</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <p>This modal opens centered and scrolls inside itself.</p>
-          <div style="height: 600px; background: #eee; padding: 10px;">Extra modal content</div>
+          <p>This modal is centered and the scroll is locked.</p>
+          <div style="height: 600px; background: #eee; padding: 10px;">Long content inside modal</div>
         </div>
       </div>
     </div>
@@ -91,37 +96,36 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
-  let scrollY = 0;
+    let scrollY = 0;
 
-  function sendHeight() {
-    const height = document.documentElement.scrollHeight;
-    window.parent.postMessage({ type: 'childHeight', height }, '*');
-  }
+    function sendHeight() {
+      const height = document.documentElement.scrollHeight;
+      window.parent.postMessage({ type: 'childHeight', height }, '*');
+    }
 
-  function openPopup() {
-    scrollY = window.scrollY;
+    function openPopup() {
+      scrollY = window.scrollY;
 
-    // Lock scroll and viewport height
-    document.body.classList.add('modal-scroll-lock', 'lock-viewport');
-    document.body.style.top = `-${scrollY}px`;
+      // Freeze scroll and lock height
+      document.body.classList.add('lock-scroll');
+      document.getElementById('bodyWrapper').style.transform = `translateY(-${scrollY}px)`;
 
-    const modal = new bootstrap.Modal(document.getElementById('popupModal'));
-    modal.show();
-  }
+      const modal = new bootstrap.Modal(document.getElementById('popupModal'));
+      modal.show();
+    }
 
-  document.getElementById('popupModal').addEventListener('shown.bs.modal', () => {
-    sendHeight();
-  });
+    document.getElementById('popupModal').addEventListener('shown.bs.modal', () => {
+      sendHeight();
+    });
 
-  document.getElementById('popupModal').addEventListener('hidden.bs.modal', () => {
-    document.body.classList.remove('modal-scroll-lock', 'lock-viewport');
-    document.body.style.top = '';
-    window.scrollTo({ top: scrollY, behavior: 'instant' });
-    sendHeight();
-  });
+    document.getElementById('popupModal').addEventListener('hidden.bs.modal', () => {
+      document.body.classList.remove('lock-scroll');
+      document.getElementById('bodyWrapper').style.transform = '';
+      window.scrollTo(0, scrollY);
+      sendHeight();
+    });
 
-  window.addEventListener('load', sendHeight);
-</script>
-
+    window.addEventListener('load', sendHeight);
+  </script>
 </body>
 </html>
