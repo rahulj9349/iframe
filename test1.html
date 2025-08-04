@@ -105,6 +105,7 @@
       sendHeightToParent('100vh');
 
       // Show modal
+console.log('scrollPositionbefore modal',scrollPosition)
       document.getElementById('modal').classList.add('active');
     }
 
@@ -112,6 +113,8 @@
       // Unlock scroll
       document.documentElement.classList.remove('lock-scroll');
       document.body.classList.remove('lock-scroll');
+
+      console.log('scrollPosition after modal',scrollPosition)
 
       // Restore scroll
       setTimeout(() => {
