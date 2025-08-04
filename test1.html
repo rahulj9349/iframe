@@ -4,9 +4,11 @@
   <meta charset="UTF-8" />
   <title>Child Page</title>
   <style>
-    body {
+    html, body {
       margin: 0;
+      padding: 0;
       font-family: sans-serif;
+      overflow-x: hidden;
     }
 
     .section {
@@ -17,16 +19,16 @@
       cursor: pointer;
     }
 
-   
-.modal {
-  display: none;
-  position: fixed; /* ✅ FIXED instead of absolute */
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-}
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
     .modal.active {
       display: flex;
     }
@@ -74,11 +76,37 @@
       <div class="close-btn"><button onclick="closeModal()">Close ✖</button></div>
       <h3>Popup Section</h3>
       <p>This is a popup modal. It scrolls if content overflows.</p>
-      <p style="height: 300px;">[Add more content here if needed]</p>
+      <p style="height: 300px;">[More modal content]</p>
     </div>
   </div>
 
   <script>
+    const modal = document.getElementById("modal");
+
+    function openModal(sectionNumber) {
+      // Prevent scroll jump
+      const scrollY = window.scrollY || window.pageYOffset;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+
+      modal.classList.add("active");
+
+      // Notify parent to resize iframe
+      sendHeight();
+    }
+
+    function closeModal() {
+      const scrollY = document.body.style.top;
+      modal.classList.remove("active");
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      window.scrollTo(0, parseInt(scrollY || '0') * -1);
+
+      sendHeight();
+    }
+
     function sendHeight() {
       const height = document.documentElement.scrollHeight;
       window.parent.postMessage({ type: 'resize-iframe', height }, '*');
@@ -86,18 +114,7 @@
 
     window.addEventListener('load', sendHeight);
     window.addEventListener('resize', sendHeight);
-
-    const modal = document.getElementById("modal");
-
-    function openModal(sectionNumber) {
-      modal.classList.add("active");
-      sendHeight(); // trigger resize in parent after modal opens
-    }
-
-    function closeModal() {
-      modal.classList.remove("active");
-      sendHeight(); // re-trigger resize after modal closes
-    }
   </script>
+
 </body>
 </html>
