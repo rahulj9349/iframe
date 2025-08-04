@@ -14,7 +14,7 @@
     .section {
       height: 300px;
       padding: 20px;
-      background: #f0f0f0;
+      background: #f9f9f9;
       border-bottom: 1px solid #ccc;
     }
 
@@ -26,15 +26,15 @@
       display: none;
       align-items: center;
       justify-content: center;
-      z-index: 999;
+      z-index: 9999;
     }
 
-    .modal-backdrop.show {
+    .modal-backdrop.active {
       display: flex;
     }
 
     .modal {
-      background: #fff;
+      background: white;
       padding: 20px;
       border-radius: 8px;
       width: 90%;
@@ -47,14 +47,15 @@
     }
 
     .modal-close button {
-      background: none;
-      border: none;
       font-size: 20px;
+      border: none;
+      background: none;
       cursor: pointer;
     }
 
     /* Scroll lock */
-    body.scroll-lock {
+    html.lock-scroll,
+    body.lock-scroll {
       overflow: hidden;
     }
   </style>
@@ -76,49 +77,56 @@
   <!-- Modal -->
   <div class="modal-backdrop" id="modal">
     <div class="modal">
-      <div class="modal-close"><button onclick="closeModal()">&times;</button></div>
-      <h3>Popup Modal</h3>
-      <p>This is modal content.</p>
-      <div style="height: 300px; background: #eee;">Modal body scroll area</div>
+      <div class="modal-close">
+        <button onclick="closeModal()">&times;</button>
+      </div>
+      <h2>Popup Modal</h2>
+      <p>This is the modal content.</p>
+      <div style="height: 300px; background: #eee;">Scrollable modal content</div>
     </div>
   </div>
 
   <script>
-    let scrollBeforeModal = 0;
+    let scrollPosition = 0;
 
     function sendHeightToParent(height) {
       window.parent.postMessage({ type: 'setHeight', height }, '*');
     }
 
     function openModal() {
-      // Store current scroll position
-      scrollBeforeModal = window.scrollY;
+      // Save scroll position
+      scrollPosition = window.scrollY;
 
-      // Lock scroll visually
-      document.body.classList.add('scroll-lock');
+      // Lock scroll without triggering layout shift
+      document.documentElement.classList.add('lock-scroll');
+      document.body.classList.add('lock-scroll');
 
-      // Set iframe to 100vh
+      // Set iframe height to 100vh
       sendHeightToParent('100vh');
 
       // Show modal
-      document.getElementById('modal').classList.add('show');
+      document.getElementById('modal').classList.add('active');
     }
 
     function closeModal() {
       // Unlock scroll
-      document.body.classList.remove('scroll-lock');
+      document.documentElement.classList.remove('lock-scroll');
+      document.body.classList.remove('lock-scroll');
+
+      // Restore scroll
+      setTimeout(() => {
+        window.scrollTo({ top: scrollPosition, behavior: 'instant' });
+      }, 0);
 
       // Restore iframe height
       const fullHeight = document.documentElement.scrollHeight;
       sendHeightToParent(fullHeight + 'px');
 
-      // Restore scroll position
-      window.scrollTo({ top: scrollBeforeModal });
-
       // Hide modal
-      document.getElementById('modal').classList.remove('show');
+      document.getElementById('modal').classList.remove('active');
     }
 
+    // Send initial height to parent
     window.addEventListener('load', () => {
       const fullHeight = document.documentElement.scrollHeight;
       sendHeightToParent(fullHeight + 'px');
