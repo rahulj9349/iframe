@@ -35,13 +35,12 @@
   <script>
     const iframe = document.getElementById("childIframe");
 
-    window.addEventListener("message", (event) => {
-      const data = event.data;
+   window.addEventListener("message", (event) => {
+  if (event.data.type === "setHeight") {
+    document.getElementById("childIframe").style.height = event.data.height;
+  }
+});
 
-      if (data.type === "setHeight") {
-        iframe.style.height = data.height;
-      }
-    });
   </script>
 </body>
 </html>
