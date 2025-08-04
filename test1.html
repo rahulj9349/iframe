@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Force Scroll to 1200px on Close</title>
+  <title>Child Page</title>
   <style>
     body {
       margin: 0;
@@ -14,75 +14,30 @@
       padding: 20px;
       border-bottom: 1px solid #ccc;
     }
-
-    .modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.5);
-      z-index: 9999;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .modal.active {
-      display: flex;
-    }
-
-    .modal-content {
-      background: white;
-      padding: 20px;
-      width: 80%;
-      max-height: 80vh;
-      overflow-y: auto;
-      border-radius: 10px;
-    }
-
-    body.lock-scroll {
-      overflow: hidden;
-    }
   </style>
 </head>
 <body>
 
   <!-- Sections -->
-  <div class="section">Section 1 <button onclick="openModal()">Open Modal</button></div>
-  <div class="section">Section 2 <button onclick="openModal()">Open Modal</button></div>
-  <div class="section">Section 3 <button onclick="openModal()">Open Modal</button></div>
-  <div class="section">Section 4 <button onclick="openModal()">Open Modal</button></div>
-  <div class="section">Section 5 <button onclick="openModal()">Open Modal</button></div>
-  <div class="section">Section 6 <button onclick="openModal()">Open Modal</button></div>
-  <div class="section">Section 7 <button onclick="openModal()">Open Modal</button></div>
-  <div class="section">Section 8 <button onclick="openModal()">Open Modal</button></div>
-  <div class="section">Section 9 <button onclick="openModal()">Open Modal</button></div>
-  <div class="section">Section 10 <button onclick="openModal()">Open Modal</button></div>
-
-  <!-- Modal -->
-  <div class="modal" id="popup">
-    <div class="modal-content">
-      <div style="text-align: right;"><button onclick="closeModal()">×</button></div>
-      <h2>Modal Content</h2>
-      <p>This is the modal popup.</p>
-      <div style="height: 200px;"></div>
-    </div>
-  </div>
+  <div class="section">Section 1</div>
+  <div class="section">Section 2</div>
+  <div class="section">Section 3</div>
+  <div class="section">Section 4</div>
+  <div class="section">Section 5</div>
+  <div class="section">Section 6</div>
+  <div class="section">Section 7</div>
+  <div class="section">Section 8</div>
+  <div class="section">Section 9</div>
+  <div class="section">Section 10</div>
 
   <script>
-    function openModal() {
-      document.body.classList.add('lock-scroll');
-      document.getElementById('popup').classList.add('active');
+    function postHeight() {
+      const height = document.body.scrollHeight;
+      window.parent.postMessage({ type: 'resize-iframe', height }, '*');
     }
 
-    function closeModal() {
-      document.getElementById('popup').classList.remove('active');
-      document.body.classList.remove('lock-scroll');
-
-      // ✅ Scroll to 1200px immediately
-      setTimeout(() => {
-        window.scrollTo({ top: 1200, behavior: 'auto' });
-      }, 0);
-    }
+    window.addEventListener('load', postHeight);
+    window.addEventListener('resize', postHeight);
   </script>
-
 </body>
 </html>
