@@ -6,8 +6,6 @@
     body {
       margin: 0;
       padding: 0;
-      height: 2000px;
-      background: linear-gradient(white, lightblue);
       font-family: sans-serif;
     }
 
@@ -15,7 +13,6 @@
       height: 200px;
       border-bottom: 1px solid #ccc;
       padding: 20px;
-      position: relative;
     }
 
     .popup-backdrop {
@@ -44,7 +41,7 @@
 </head>
 <body>
 
-  <!-- 10 sections with buttons -->
+  <!-- Sections -->
   <div class="section">Section 1 <button onclick="openPopup()">Open Popup</button></div>
   <div class="section">Section 2 <button onclick="openPopup()">Open Popup</button></div>
   <div class="section">Section 3 <button onclick="openPopup()">Open Popup</button></div>
@@ -59,27 +56,38 @@
   <!-- Popup -->
   <div class="popup-backdrop" id="popupBackdrop"></div>
   <div class="popup" id="popupModal">
-    <h2>Popup Opened</h2>
-    <p>This popup is centered and the iframe scroll is preserved.</p>
+    <h2>Modal</h2>
+    <p>This popup appears without scroll jump.</p>
     <button onclick="closePopup()">Close</button>
   </div>
 
   <script>
+    function sendHeight() {
+      const height = document.documentElement.scrollHeight;
+      window.parent.postMessage({ type: 'childHeight', height }, '*');
+    }
+
     function openPopup() {
       document.getElementById('popupBackdrop').style.display = 'block';
       document.getElementById('popupModal').style.display = 'block';
-
-      // Notify parent to set iframe height to 100vh and preserve scroll
-      window.parent.postMessage('popupOpened', '*');
+      window.parent.postMessage('modalOpened', '*');
     }
 
     function closePopup() {
       document.getElementById('popupBackdrop').style.display = 'none';
       document.getElementById('popupModal').style.display = 'none';
-
-      // Notify parent to restore original iframe height
-      window.parent.postMessage('popupClosed', '*');
+      window.parent.postMessage('modalClosed', '*');
     }
+
+    // Respond when parent requests height
+    window.addEventListener('message', function (event) {
+      if (event.data?.type === 'getHeight') {
+        sendHeight();
+      }
+    });
+
+    // Initial height on load
+    window.addEventListener('load', sendHeight);
   </script>
 </body>
 </html>
