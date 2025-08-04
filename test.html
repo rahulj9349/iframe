@@ -6,14 +6,16 @@
   <style>
     body {
       margin: 0;
-      font-family: sans-serif;
     }
+
     header, footer {
+      height: 50px;
       background: #333;
       color: white;
       text-align: center;
-      padding: 20px;
+      line-height: 50px;
     }
+
     iframe {
       width: 100%;
       border: none;
@@ -31,20 +33,25 @@
   <script>
     const iframe = document.getElementById("childFrame");
 
-    // Adjust iframe height after load or when child resizes
+    // Send height to resize iframe
     window.addEventListener("message", (event) => {
       if (event.data.type === "resize-iframe") {
         iframe.style.height = event.data.height + "px";
       }
     });
 
-    // Send scroll position to iframe
-    window.addEventListener("scroll", () => {
+    function sendScrollDataToChild() {
       iframe.contentWindow.postMessage({
-        type: "parent-scroll-position",
-        scrollY: window.scrollY
+        type: "parent-scroll-data",
+        scrollY: window.scrollY,
+        viewportHeight: window.innerHeight
       }, "*");
-    });
+    }
+
+    // Send scroll position on scroll and resize
+    window.addEventListener("scroll", sendScrollDataToChild);
+    window.addEventListener("resize", sendScrollDataToChild);
+    window.addEventListener("load", sendScrollDataToChild);
   </script>
 
 </body>
