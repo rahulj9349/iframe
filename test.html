@@ -40,29 +40,28 @@
     const iframe = document.getElementById('myIframe');
     const wrapper = document.getElementById('iframeWrapper');
 
-    window.addEventListener('message', (event) => {
-      const data = event.data;
+   window.addEventListener('message', (event) => {
+  const data = event.data;
 
-      if (data?.type === 'childHeight') {
-        iframe.style.height = data.height + 'px';
-      }
+  if (data?.type === 'modalOpened') {
+    const scrollTop = wrapper.scrollTop;
 
-      if (data === 'modalOpened') {
-        // Preserve scroll position
-        const scrollTop = wrapper.scrollTop;
+    iframe.style.height = '100vh';
 
-        iframe.style.height = '100vh';
+    setTimeout(() => {
+      wrapper.scrollTop = scrollTop;
+    }, 50);
+  }
 
-        setTimeout(() => {
-          wrapper.scrollTop = scrollTop; // Restore scroll
-        }, 50);
-      }
+  if (data === 'modalClosed') {
+    iframe.contentWindow.postMessage({ type: 'getHeight' }, '*');
+  }
 
-      if (data === 'modalClosed') {
-        // Ask child to re-send actual height
-        iframe.contentWindow.postMessage({ type: 'getHeight' }, '*');
-      }
-    });
+  if (data?.type === 'childHeight') {
+    iframe.style.height = data.height + 'px';
+  }
+});
+
   </script>
 </body>
 </html>
