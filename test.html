@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Parent</title>
   <style>
     body {
@@ -33,14 +33,15 @@
   <script>
     const iframe = document.getElementById("childFrame");
 
-    // Send height to resize iframe
+    // Resize iframe based on child height
     window.addEventListener("message", (event) => {
       if (event.data.type === "resize-iframe") {
         iframe.style.height = event.data.height + "px";
       }
     });
 
-    function sendScrollDataToChild() {
+    // Send scroll + viewport info to child
+    function sendScrollInfo() {
       iframe.contentWindow.postMessage({
         type: "parent-scroll-data",
         scrollY: window.scrollY,
@@ -48,10 +49,9 @@
       }, "*");
     }
 
-    // Send scroll position on scroll and resize
-    window.addEventListener("scroll", sendScrollDataToChild);
-    window.addEventListener("resize", sendScrollDataToChild);
-    window.addEventListener("load", sendScrollDataToChild);
+    window.addEventListener("scroll", sendScrollInfo);
+    window.addEventListener("resize", sendScrollInfo);
+    window.addEventListener("load", sendScrollInfo);
   </script>
 
 </body>
