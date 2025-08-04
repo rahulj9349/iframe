@@ -27,11 +27,18 @@
       overflow: hidden !important;
     }
 
+    /* ✅ Force modal to center in iframe viewport */
+    .modal.show {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+
     .modal-dialog {
+      margin: 0 !important;
       max-height: 100vh;
       display: flex;
       flex-direction: column;
-      margin: auto;
     }
 
     .modal-content {
@@ -64,12 +71,12 @@
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Popup Modal</h5>
+          <h5 class="modal-title">Centered Modal</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <p>This modal scrolls inside itself.</p>
-          <div style="height: 600px; background: #eee; padding: 10px;">Extra content inside modal</div>
+          <p>This modal opens centered and scrolls inside itself.</p>
+          <div style="height: 600px; background: #eee; padding: 10px;">Extra modal content</div>
         </div>
       </div>
     </div>
@@ -88,8 +95,6 @@
 
     function openPopup() {
       scrollY = window.scrollY;
-
-      // Freeze scroll by using fixed + negative top
       document.body.classList.add('modal-scroll-lock');
       document.body.style.top = `-${scrollY}px`;
 
@@ -98,18 +103,16 @@
     }
 
     document.getElementById('popupModal').addEventListener('shown.bs.modal', () => {
-      sendHeight(); // Send updated height (modal might stretch height)
+      sendHeight(); // Recalculate height if modal expands content
     });
 
     document.getElementById('popupModal').addEventListener('hidden.bs.modal', () => {
       document.body.classList.remove('modal-scroll-lock');
       document.body.style.top = '';
       window.scrollTo({ top: scrollY, behavior: 'instant' });
-
-      sendHeight(); // Send updated height (after modal closed)
+      sendHeight(); // Send updated height after modal closes
     });
 
-    // Initial height after load
     window.addEventListener('load', sendHeight);
   </script>
 </body>
