@@ -14,11 +14,10 @@
     .section {
       height: 300px;
       padding: 20px;
-      background: #f0f0f0;
+      background: #f9f9f9;
       border-bottom: 1px solid #ccc;
     }
 
-    /* Optional: Lock scroll when modal is open */
     body.scroll-locked {
       position: fixed;
       left: 0;
@@ -66,9 +65,9 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <p>This modal opens at the scroll position you clicked. Scroll is locked.</p>
-          <div style="height: 600px; background: #ddd; padding: 10px;">
-            Scrollable content inside modal
+          <p>This modal opens at the clicked scroll position. Scroll is locked.</p>
+          <div style="height: 600px; background: #eee; padding: 10px;">
+            Scrollable modal content
           </div>
         </div>
       </div>
@@ -86,31 +85,30 @@
     function openModal() {
       scrollY = window.scrollY;
 
-      // Lock scroll AFTER current frame
+      // Lock scroll after current frame
       requestAnimationFrame(() => {
         document.body.classList.add('scroll-locked');
         document.body.style.top = `-${scrollY}px`;
       });
 
-      // Lock iframe height to 100vh
+      // Notify parent to set iframe height to 100vh
       sendHeightToParent('100vh');
 
       const modal = new bootstrap.Modal(document.getElementById('popupModal'));
       modal.show();
     }
 
-    // Restore after modal close
     document.getElementById('popupModal').addEventListener('hidden.bs.modal', () => {
+      // Restore scroll state
       document.body.classList.remove('scroll-locked');
       document.body.style.top = '';
       window.scrollTo(0, scrollY);
 
-      // Reset height
+      // Restore full iframe height
       const fullHeight = document.documentElement.scrollHeight;
       sendHeightToParent(fullHeight + 'px');
     });
 
-    // Send height on initial load
     window.addEventListener('load', () => {
       const fullHeight = document.documentElement.scrollHeight;
       sendHeightToParent(fullHeight + 'px');
