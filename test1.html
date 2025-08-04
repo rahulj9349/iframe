@@ -14,7 +14,7 @@
     .section {
       height: 300px;
       padding: 20px;
-      background: #f9f9f9;
+      background: #f0f0f0;
       border-bottom: 1px solid #ccc;
     }
 
@@ -65,9 +65,9 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <p>This modal opens at the clicked scroll position. Scroll is locked.</p>
-          <div style="height: 600px; background: #eee; padding: 10px;">
-            Scrollable modal content
+          <p>This modal opens at the scroll position you clicked. Scroll is locked.</p>
+          <div style="height: 600px; background: #ddd; padding: 10px;">
+            Scrollable content inside modal
           </div>
         </div>
       </div>
@@ -83,34 +83,35 @@
     }
 
     function openModal() {
-  scrollY = window.scrollY;
+      scrollY = window.scrollY;
 
-  // Open modal first
-  const modal = new bootstrap.Modal(document.getElementById('popupModal'));
-  modal.show();
+      const modalElement = document.getElementById('popupModal');
+      const modal = new bootstrap.Modal(modalElement, { focus: false });
+      modal.show();
 
-  // Wait for modal to be fully shown, THEN lock scroll
-  document.getElementById('popupModal').addEventListener('shown.bs.modal', () => {
-    // Lock body at current scroll
-    document.body.classList.add('scroll-locked');
-    document.body.style.top = `-${scrollY}px`;
+      // Wait for the modal to be rendered before locking scroll
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          document.body.classList.add('scroll-locked');
+          document.body.style.top = `-${scrollY}px`;
 
-    // Force iframe height to full screen
-    sendHeightToParent('100vh');
-  }, { once: true }); // Attach this listener only once
-}
+          // Set iframe height to 100vh
+          sendHeightToParent('100vh');
+        });
+      });
+    }
 
-
+    // Restore scroll and iframe height when modal closes
     document.getElementById('popupModal').addEventListener('hidden.bs.modal', () => {
-  document.body.classList.remove('scroll-locked');
-  document.body.style.top = '';
-  window.scrollTo(0, scrollY);
+      document.body.classList.remove('scroll-locked');
+      document.body.style.top = '';
+      window.scrollTo(0, scrollY);
 
-  const fullHeight = document.documentElement.scrollHeight;
-  sendHeightToParent(fullHeight + 'px');
-});
+      const fullHeight = document.documentElement.scrollHeight;
+      sendHeightToParent(fullHeight + 'px');
+    });
 
-
+    // On load, send full height to parent
     window.addEventListener('load', () => {
       const fullHeight = document.documentElement.scrollHeight;
       sendHeightToParent(fullHeight + 'px');
