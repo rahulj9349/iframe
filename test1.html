@@ -50,6 +50,11 @@
       overflow-y: auto;
       max-height: calc(100vh - 120px);
     }
+    body.lock-viewport {
+  height: 100vh;
+  overflow: hidden;
+}
+
   </style>
 </head>
 
@@ -86,34 +91,37 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
-    let scrollY = 0;
+  let scrollY = 0;
 
-    function sendHeight() {
-      const height = document.documentElement.scrollHeight;
-      window.parent.postMessage({ type: 'childHeight', height }, '*');
-    }
+  function sendHeight() {
+    const height = document.documentElement.scrollHeight;
+    window.parent.postMessage({ type: 'childHeight', height }, '*');
+  }
 
-    function openPopup() {
-      scrollY = window.scrollY;
-      document.body.classList.add('modal-scroll-lock');
-      document.body.style.top = `-${scrollY}px`;
+  function openPopup() {
+    scrollY = window.scrollY;
 
-      const modal = new bootstrap.Modal(document.getElementById('popupModal'));
-      modal.show();
-    }
+    // Lock scroll and viewport height
+    document.body.classList.add('modal-scroll-lock', 'lock-viewport');
+    document.body.style.top = `-${scrollY}px`;
 
-    document.getElementById('popupModal').addEventListener('shown.bs.modal', () => {
-      sendHeight(); // Recalculate height if modal expands content
-    });
+    const modal = new bootstrap.Modal(document.getElementById('popupModal'));
+    modal.show();
+  }
 
-    document.getElementById('popupModal').addEventListener('hidden.bs.modal', () => {
-      document.body.classList.remove('modal-scroll-lock');
-      document.body.style.top = '';
-      window.scrollTo({ top: scrollY, behavior: 'instant' });
-      sendHeight(); // Send updated height after modal closes
-    });
+  document.getElementById('popupModal').addEventListener('shown.bs.modal', () => {
+    sendHeight();
+  });
 
-    window.addEventListener('load', sendHeight);
-  </script>
+  document.getElementById('popupModal').addEventListener('hidden.bs.modal', () => {
+    document.body.classList.remove('modal-scroll-lock', 'lock-viewport');
+    document.body.style.top = '';
+    window.scrollTo({ top: scrollY, behavior: 'instant' });
+    sendHeight();
+  });
+
+  window.addEventListener('load', sendHeight);
+</script>
+
 </body>
 </html>
