@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Child Page with Scroll-Locked Modal</title>
+  <title>Child Page with Modal</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <!-- Bootstrap CSS -->
@@ -15,7 +15,7 @@
     }
 
     .section {
-      height: 200px;
+      height: 300px;
       padding: 20px;
       border-bottom: 1px solid #ccc;
       background: #f9f9f9;
@@ -41,13 +41,13 @@
 
     .modal-body {
       overflow-y: auto;
-      max-height: calc(100vh - 120px); /* Adjust for header/footer */
+      max-height: calc(100vh - 120px);
     }
   </style>
 </head>
 
 <body>
-  <!-- 10 Scrollable Sections -->
+  <!-- 10 Sections -->
   <div class="section">Section 1 <button class="btn btn-primary" onclick="openPopup()">Open Modal</button></div>
   <div class="section">Section 2 <button class="btn btn-primary" onclick="openPopup()">Open Modal</button></div>
   <div class="section">Section 3 <button class="btn btn-primary" onclick="openPopup()">Open Modal</button></div>
@@ -59,18 +59,17 @@
   <div class="section">Section 9 <button class="btn btn-primary" onclick="openPopup()">Open Modal</button></div>
   <div class="section">Section 10 <button class="btn btn-primary" onclick="openPopup()">Open Modal</button></div>
 
-  <!-- Bootstrap Modal -->
+  <!-- Modal -->
   <div class="modal fade" id="popupModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Modal Title</h5>
+          <h5 class="modal-title">Popup Modal</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <p>This modal opens without scroll jumping the page.</p>
-          <p>It scrolls inside if there's more content:</p>
-          <div style="height: 600px; background: #eee; padding: 10px;">Extra content block</div>
+          <p>This modal scrolls inside itself.</p>
+          <div style="height: 600px; background: #eee; padding: 10px;">Extra content inside modal</div>
         </div>
       </div>
     </div>
@@ -82,10 +81,15 @@
   <script>
     let scrollY = 0;
 
+    function sendHeight() {
+      const height = document.documentElement.scrollHeight;
+      window.parent.postMessage({ type: 'childHeight', height }, '*');
+    }
+
     function openPopup() {
       scrollY = window.scrollY;
 
-      // Lock body scroll visually
+      // Freeze scroll by using fixed + negative top
       document.body.classList.add('modal-scroll-lock');
       document.body.style.top = `-${scrollY}px`;
 
@@ -93,13 +97,20 @@
       modal.show();
     }
 
-    // On modal close
+    document.getElementById('popupModal').addEventListener('shown.bs.modal', () => {
+      sendHeight(); // Send updated height (modal might stretch height)
+    });
+
     document.getElementById('popupModal').addEventListener('hidden.bs.modal', () => {
-      // Unlock scroll and restore position
       document.body.classList.remove('modal-scroll-lock');
       document.body.style.top = '';
       window.scrollTo({ top: scrollY, behavior: 'instant' });
+
+      sendHeight(); // Send updated height (after modal closed)
     });
+
+    // Initial height after load
+    window.addEventListener('load', sendHeight);
   </script>
 </body>
 </html>
