@@ -2,51 +2,45 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Child Page (Iframe)</title>
+  <title>Child Page</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
+    html,
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
+      padding: 0;
+      font-family: sans-serif;
     }
 
     .section {
       height: 300px;
       padding: 20px;
-      background: #f0f0f0;
+      background: #f5f5f5;
       border-bottom: 1px solid #ccc;
     }
 
-    /* Scroll lock styles */
-    body.scroll-locked {
-      position: fixed;
-      overflow: hidden;
-      width: 100%;
-    }
-
-    /* Modal styles */
-    .modal-backdrop {
+    /* Modal Styles */
+    .modal-overlay {
       position: fixed;
       inset: 0;
       background: rgba(0, 0, 0, 0.6);
       display: none;
       align-items: center;
       justify-content: center;
-      z-index: 999;
+      z-index: 9999;
     }
 
-    .modal-backdrop.show {
+    .modal-overlay.active {
       display: flex;
     }
 
-    .modal-content {
-      width: 90%;
-      max-height: 90vh;
+    .modal {
       background: #fff;
       padding: 20px;
+      max-height: 90vh;
+      width: 90%;
       border-radius: 8px;
       overflow-y: auto;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
     }
 
     .modal-close {
@@ -54,10 +48,15 @@
     }
 
     .modal-close button {
-      font-size: 20px;
       background: none;
       border: none;
+      font-size: 20px;
       cursor: pointer;
+    }
+
+    /* Prevent scroll globally */
+    html.lock-scroll {
+      overflow: hidden;
     }
   </style>
 </head>
@@ -76,16 +75,14 @@
   <div class="section">Section 10 <button onclick="openModal()">Open Modal</button></div>
 
   <!-- Modal -->
-  <div class="modal-backdrop" id="customModal">
-    <div class="modal-content">
+  <div class="modal-overlay" id="customModal">
+    <div class="modal">
       <div class="modal-close">
         <button onclick="closeModal()">&times;</button>
       </div>
       <h4>Popup Modal</h4>
-      <p>This modal stays in view without scrolling the child to the top.</p>
-      <div style="height: 400px; background: #eee; padding: 10px;">
-        Scrollable content inside modal
-      </div>
+      <p>This modal opens without scrolling the background.</p>
+      <div style="height: 400px; background: #eee;">Modal Scroll Content</div>
     </div>
   </div>
 
@@ -99,28 +96,29 @@
     function openModal() {
       scrollY = window.scrollY;
 
-      // Lock scroll
-      document.body.classList.add('scroll-locked');
-      document.body.style.top = `-${scrollY}px`;
+      // Lock scroll by hiding overflow
+      document.documentElement.classList.add('lock-scroll');
 
-      // Set iframe height to device view
+      // Set iframe height to full screen
       sendHeightToParent('100vh');
 
       // Show modal
-      document.getElementById('customModal').classList.add('show');
+      document.getElementById('customModal').classList.add('active');
     }
 
     function closeModal() {
-      document.body.classList.remove('scroll-locked');
-      document.body.style.top = '';
+      // Unlock scroll
+      document.documentElement.classList.remove('lock-scroll');
+
+      // Restore scroll
       window.scrollTo(0, scrollY);
 
-      // Restore full height
+      // Restore iframe height
       const fullHeight = document.documentElement.scrollHeight;
       sendHeightToParent(fullHeight + 'px');
 
       // Hide modal
-      document.getElementById('customModal').classList.remove('show');
+      document.getElementById('customModal').classList.remove('active');
     }
 
     window.addEventListener('load', () => {
