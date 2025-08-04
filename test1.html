@@ -18,10 +18,13 @@
       border-bottom: 1px solid #ccc;
     }
 
+    /* Optional: Lock scroll when modal is open */
     body.scroll-locked {
       position: fixed;
-      overflow: hidden;
+      left: 0;
+      right: 0;
       width: 100%;
+      overflow: hidden;
     }
 
     .modal.show {
@@ -35,20 +38,10 @@
       max-height: 100vh;
     }
 
-    .modal-content {
-      height: 100vh;
-      overflow: hidden;
-    }
-
     .modal-body {
       overflow-y: auto;
       max-height: calc(100vh - 100px);
     }
-body.scroll-locked {
-  position: fixed;
-  overflow: hidden;
-  width: 100%;
-}
   </style>
 </head>
 <body>
@@ -73,7 +66,7 @@ body.scroll-locked {
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <p>This modal opens where you clicked. Scroll is locked.</p>
+          <p>This modal opens at the scroll position you clicked. Scroll is locked.</p>
           <div style="height: 600px; background: #ddd; padding: 10px;">
             Scrollable content inside modal
           </div>
@@ -90,43 +83,34 @@ body.scroll-locked {
       window.parent.postMessage({ type: 'setHeight', height }, '*');
     }
 
-   function openModal() {
-  scrollY = window.scrollY;
+    function openModal() {
+      scrollY = window.scrollY;
 
-  // 🛑 Prevent automatic scroll to top
-  requestAnimationFrame(() => {
-    // Lock scroll visually
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.left = '0';
-    document.body.style.right = '0';
-    document.body.style.width = '100%';
-  });
+      // Lock scroll AFTER current frame
+      requestAnimationFrame(() => {
+        document.body.classList.add('scroll-locked');
+        document.body.style.top = `-${scrollY}px`;
+      });
 
-  // Tell parent to fix iframe height
-  sendHeightToParent('100vh');
+      // Lock iframe height to 100vh
+      sendHeightToParent('100vh');
 
-  const modal = new bootstrap.Modal(document.getElementById('popupModal'));
-  modal.show();
-}
+      const modal = new bootstrap.Modal(document.getElementById('popupModal'));
+      modal.show();
+    }
 
+    // Restore after modal close
+    document.getElementById('popupModal').addEventListener('hidden.bs.modal', () => {
+      document.body.classList.remove('scroll-locked');
+      document.body.style.top = '';
+      window.scrollTo(0, scrollY);
 
-   document.getElementById('popupModal').addEventListener('hidden.bs.modal', () => {
-  // Restore scroll position
-  document.body.style.position = '';
-  document.body.style.top = '';
-  document.body.style.left = '';
-  document.body.style.right = '';
-  document.body.style.width = '';
-  window.scrollTo(0, scrollY);
+      // Reset height
+      const fullHeight = document.documentElement.scrollHeight;
+      sendHeightToParent(fullHeight + 'px');
+    });
 
-  // Restore full iframe height
-  const fullHeight = document.documentElement.scrollHeight;
-  sendHeightToParent(fullHeight + 'px');
-});
-
-
-    // On load, send initial height
+    // Send height on initial load
     window.addEventListener('load', () => {
       const fullHeight = document.documentElement.scrollHeight;
       sendHeightToParent(fullHeight + 'px');
