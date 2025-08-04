@@ -18,7 +18,6 @@
       border-bottom: 1px solid #ccc;
     }
 
-    /* Modal styling */
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -53,7 +52,6 @@
       cursor: pointer;
     }
 
-    /* Scroll lock */
     html.lock-scroll,
     body.lock-scroll {
       overflow: hidden;
@@ -63,16 +61,16 @@
 <body>
 
   <!-- Sections -->
-  <div class="section">Section 1 <button onclick="console.log('ScrollY:', window.scrollY); openModal()">Open Modal</button></div>
-  <div class="section">Section 2 <button onclick="console.log('ScrollY:', window.scrollY); openModal()">Open Modal</button></div>
-  <div class="section">Section 3 <button onclick="console.log('ScrollY:', window.scrollY); openModal()">Open Modal</button></div>
-  <div class="section">Section 4 <button onclick="console.log('ScrollY:', window.scrollY); openModal()">Open Modal</button></div>
-  <div class="section">Section 5 <button onclick="console.log('ScrollY:', window.scrollY); openModal()">Open Modal</button></div>
-  <div class="section">Section 6 <button onclick="console.log('ScrollY:', window.scrollY); openModal()">Open Modal</button></div>
-  <div class="section">Section 7 <button onclick="console.log('ScrollY:', window.scrollY); openModal()">Open Modal</button></div>
-  <div class="section">Section 8 <button onclick="console.log('ScrollY:', window.scrollY); openModal()">Open Modal</button></div>
-  <div class="section">Section 9 <button onclick="console.log('ScrollY:', window.scrollY); openModal()">Open Modal</button></div>
-  <div class="section">Section 10 <button onclick="console.log('ScrollY:', window.scrollY); openModal()">Open Modal</button></div>
+  <div class="section">Section 1 <button onclick="openModal()">Open Modal</button></div>
+  <div class="section">Section 2 <button onclick="openModal()">Open Modal</button></div>
+  <div class="section">Section 3 <button onclick="openModal()">Open Modal</button></div>
+  <div class="section">Section 4 <button onclick="openModal()">Open Modal</button></div>
+  <div class="section">Section 5 <button onclick="openModal()">Open Modal</button></div>
+  <div class="section">Section 6 <button onclick="openModal()">Open Modal</button></div>
+  <div class="section">Section 7 <button onclick="openModal()">Open Modal</button></div>
+  <div class="section">Section 8 <button onclick="openModal()">Open Modal</button></div>
+  <div class="section">Section 9 <button onclick="openModal()">Open Modal</button></div>
+  <div class="section">Section 10 <button onclick="openModal()">Open Modal</button></div>
 
   <!-- Modal -->
   <div class="modal-backdrop" id="modal">
@@ -93,46 +91,41 @@
       window.parent.postMessage({ type: 'setHeight', height }, '*');
     }
 
-   function openModal() {
-  // ✅ Get scroll position accurately
-  scrollPosition = document.documentElement.scrollTop || document.body.scrollTop || 0;
-     scrollPosition = 1012
-  console.log("Captured Scroll Position:", scrollPosition);
+    function openModal() {
+      // ✅ 1. Save scroll BEFORE changing DOM
+      scrollPosition = document.documentElement.scrollTop || document.body.scrollTop || 0;
 
-  // ✅ Lock scroll visually
-  document.documentElement.classList.add('lock-scroll');
-  document.body.classList.add('lock-scroll');
+      // ✅ 2. Show modal
+      document.getElementById('modal').classList.add('active');
 
-  // ✅ Ask parent to shrink iframe height
-  sendHeightToParent('100vh');
+      // ✅ 3. Lock scroll
+      document.documentElement.classList.add('lock-scroll');
+      document.body.classList.add('lock-scroll');
 
-  // ✅ Show modal
-  document.getElementById('modal').classList.add('active');
-}
-
-
+      // ✅ 4. Ask parent to shrink iframe
+      setTimeout(() => {
+        sendHeightToParent('100vh');
+      }, 50); // Allow time for modal to show
+    }
 
     function closeModal() {
-      // Unlock scroll
+      // ✅ 1. Unlock scroll
       document.documentElement.classList.remove('lock-scroll');
       document.body.classList.remove('lock-scroll');
 
-      console.log('scrollPosition after modal',scrollPosition)
+      // ✅ 2. Hide modal
+      document.getElementById('modal').classList.remove('active');
 
-      // Restore scroll
-      setTimeout(() => {
-        window.scrollTo({ top: scrollPosition, behavior: 'instant' });
-      }, 0);
-
-      // Restore iframe height
+      // ✅ 3. Restore full height FIRST
       const fullHeight = document.documentElement.scrollHeight;
       sendHeightToParent(fullHeight + 'px');
 
-      // Hide modal
-      document.getElementById('modal').classList.remove('active');
+      // ✅ 4. Restore scroll AFTER height is applied
+      setTimeout(() => {
+        window.scrollTo(0, scrollPosition);
+      }, 100);
     }
 
-    // Send initial height to parent
     window.addEventListener('load', () => {
       const fullHeight = document.documentElement.scrollHeight;
       sendHeightToParent(fullHeight + 'px');
