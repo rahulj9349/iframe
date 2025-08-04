@@ -1,60 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Parent with Header, Dynamic Iframe, Footer</title>
+  <meta charset="UTF-8">
+  <title>Parent</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
     body {
+      margin: 0;
       font-family: sans-serif;
-      overflow-x: hidden;
     }
-
-    header {
+    header, footer {
       background: #333;
       color: white;
-      padding: 20px;
       text-align: center;
+      padding: 20px;
     }
-
     iframe {
       width: 100%;
       border: none;
-      display: block;
-    }
-
-    footer {
-      background: #222;
-      color: #fff;
-      padding: 20px;
-      text-align: center;
     }
   </style>
 </head>
 <body>
 
-  <header>
-    <h1>Parent Header</h1>
-  </header>
+  <header>Parent Header</header>
 
   <iframe id="childFrame" src="test1.html"></iframe>
 
-  <footer>
-    <p>Parent Footer</p>
-  </footer>
+  <footer>Parent Footer</footer>
 
   <script>
     const iframe = document.getElementById("childFrame");
 
+    // Adjust iframe height after load or when child resizes
     window.addEventListener("message", (event) => {
       if (event.data.type === "resize-iframe") {
         iframe.style.height = event.data.height + "px";
       }
+    });
+
+    // Send scroll position to iframe
+    window.addEventListener("scroll", () => {
+      iframe.contentWindow.postMessage({
+        type: "parent-scroll-position",
+        scrollY: window.scrollY
+      }, "*");
     });
   </script>
 
