@@ -53,6 +53,7 @@
 
     window.addEventListener("message", (event) => {
       if (event.data.type === "resize-iframe") {
+        console.log('resize',event.data.height)
         iframe.style.height = event.data.height + "px";
       }
     });
