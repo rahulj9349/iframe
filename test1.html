@@ -38,6 +38,13 @@
     .close-btn {
       text-align: right;
     }
+
+    /* ✳️ Prevent body scroll when modal open */
+    body.modal-open {
+      position: fixed;
+      width: 100%;
+      overflow: hidden;
+    }
   </style>
 </head>
 <body>
@@ -58,7 +65,7 @@
   <div class="modal" id="modal">
     <div class="close-btn"><button onclick="closeModal()">Close ✖</button></div>
     <h3>Centered Modal</h3>
-    <p>Modal is centered in visible device viewport (based on parent scroll).</p>
+    <p>Modal is centered and body scroll is frozen when open.</p>
   </div>
 
   <script>
@@ -66,7 +73,6 @@
     let scrollYFromParent = 0;
     let viewportHeightFromParent = 0;
 
-    // Receive scroll and viewport info from parent
     window.addEventListener("message", (event) => {
       if (event.data.type === "parent-scroll-data") {
         scrollYFromParent = event.data.scrollY;
@@ -75,15 +81,23 @@
     });
 
     function openModal() {
-      const estimatedModalHeight = 200; // you can refine this
+      const estimatedModalHeight = 200;
       const top = scrollYFromParent + (viewportHeightFromParent - estimatedModalHeight) / 2;
       modal.style.top = `${top}px`;
       modal.classList.add("active");
+
+      // Freeze scroll
+      document.body.classList.add("modal-open");
+
       sendHeight();
     }
 
     function closeModal() {
       modal.classList.remove("active");
+
+      // Unfreeze scroll
+      document.body.classList.remove("modal-open");
+
       sendHeight();
     }
 
