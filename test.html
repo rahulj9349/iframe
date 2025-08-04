@@ -16,48 +16,51 @@
     }
 
     #iframeWrapper {
-      height: 450px; /* 550 - 50 header - 50 footer */
+      height: 450px; /* device height (550) - header (50) - footer (50) */
       overflow: auto;
     }
 
     iframe {
       width: 100%;
-      height: 2000px;
       border: none;
       transition: height 0.2s ease;
     }
   </style>
 </head>
 <body>
-  <header>Header (50px)</header>
+  <header>Header</header>
 
   <div id="iframeWrapper">
-    <iframe id="myIframe" src="test1.html"></iframe>
+    <iframe id="myIframe" src="child.html"></iframe>
   </div>
 
-  <footer>Footer (50px)</footer>
+  <footer>Footer</footer>
 
   <script>
-    window.addEventListener('message', function(event) {
-      if (event.data === 'popupOpened') {
-        const iframe = document.getElementById('myIframe');
+    const iframe = document.getElementById('myIframe');
+    const wrapper = document.getElementById('iframeWrapper');
 
-        // Capture current scroll position of the iframe wrapper
-        const wrapper = document.getElementById('iframeWrapper');
+    window.addEventListener('message', (event) => {
+      const data = event.data;
+
+      if (data?.type === 'childHeight') {
+        iframe.style.height = data.height + 'px';
+      }
+
+      if (data === 'modalOpened') {
+        // Preserve scroll position
         const scrollTop = wrapper.scrollTop;
 
-        // Set height to 100vh (device height)
         iframe.style.height = '100vh';
 
-        // Restore scroll position
         setTimeout(() => {
-          wrapper.scrollTop = scrollTop;
+          wrapper.scrollTop = scrollTop; // Restore scroll
         }, 50);
       }
 
-      if (event.data === 'popupClosed') {
-        const iframe = document.getElementById('myIframe');
-        iframe.style.height = '2000px';
+      if (data === 'modalClosed') {
+        // Ask child to re-send actual height
+        iframe.contentWindow.postMessage({ type: 'getHeight' }, '*');
       }
     });
   </script>
