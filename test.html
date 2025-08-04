@@ -5,19 +5,17 @@
   <title>Parent Page</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    html, body {
+    body, html {
       margin: 0;
       padding: 0;
     }
-
     header, footer {
       height: 50px;
-      background: #333;
+      background-color: #333;
       color: white;
       text-align: center;
       line-height: 50px;
     }
-
     iframe {
       width: 100%;
       border: none;
@@ -26,7 +24,7 @@
   </style>
 </head>
 <body>
-  <header>Parent Header 1</header>
+  <header>Parent Header</header>
 
   <iframe id="childIframe" src="test1.html"></iframe>
 
@@ -35,12 +33,12 @@
   <script>
     const iframe = document.getElementById("childIframe");
 
-   window.addEventListener("message", (event) => {
-  if (event.data.type === "setHeight") {
-    document.getElementById("childIframe").style.height = event.data.height;
-  }
-});
-
+    window.addEventListener("message", (event) => {
+      const data = event.data;
+      if (data?.type === "setHeight") {
+        iframe.style.height = data.height;
+      }
+    });
   </script>
 </body>
 </html>
