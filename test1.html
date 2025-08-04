@@ -85,29 +85,41 @@
       window.parent.postMessage({ type: 'setHeight', height }, '*');
     }
 
-    function openModal() {
-      scrollY = window.scrollY;
+   function openModal() {
+  scrollY = window.scrollY;
 
-      // Lock scroll visually
-      document.body.style.top = `-${scrollY}px`;
-      document.body.classList.add('scroll-locked');
+  // 🛑 Prevent automatic scroll to top
+  requestAnimationFrame(() => {
+    // Lock scroll visually
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.body.style.width = '100%';
+  });
 
-      // Tell parent to fix iframe to 100vh
-      sendHeightToParent('100vh');
+  // Tell parent to fix iframe height
+  sendHeightToParent('100vh');
 
-      const modal = new bootstrap.Modal(document.getElementById('popupModal'));
-      modal.show();
-    }
+  const modal = new bootstrap.Modal(document.getElementById('popupModal'));
+  modal.show();
+}
 
-    document.getElementById('popupModal').addEventListener('hidden.bs.modal', () => {
-      document.body.classList.remove('scroll-locked');
-      document.body.style.top = '';
-      window.scrollTo(0, scrollY);
 
-      // Restore full height
-      const fullHeight = document.documentElement.scrollHeight;
-      sendHeightToParent(fullHeight + 'px');
-    });
+   document.getElementById('popupModal').addEventListener('hidden.bs.modal', () => {
+  // Restore scroll position
+  document.body.style.position = '';
+  document.body.style.top = '';
+  document.body.style.left = '';
+  document.body.style.right = '';
+  document.body.style.width = '';
+  window.scrollTo(0, scrollY);
+
+  // Restore full iframe height
+  const fullHeight = document.documentElement.scrollHeight;
+  sendHeightToParent(fullHeight + 'px');
+});
+
 
     // On load, send initial height
     window.addEventListener('load', () => {
