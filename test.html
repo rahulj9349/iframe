@@ -1,7 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>Parent Page</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
       margin: 0;
@@ -9,14 +11,14 @@
 
     header, footer {
       height: 50px;
-      background: #333;
+      background: #444;
       color: white;
       text-align: center;
       line-height: 50px;
     }
 
     #iframeWrapper {
-      height: 450px; /* e.g. 550 (device height) - 50 header - 50 footer */
+      height: 450px; /* Example: 550 device height - 50 header - 50 footer */
       overflow: auto;
     }
 
@@ -28,36 +30,24 @@
   </style>
 </head>
 <body>
-  <header>Header</header>
+
+  <header>Parent Header</header>
 
   <div id="iframeWrapper">
-    <iframe id="myIframe" src="test1.html"></iframe>
+    <iframe id="myIframe" src="tets1.html"></iframe>
   </div>
 
-  <footer>Footer</footer>
+  <footer>Parent Footer</footer>
 
   <script>
-    const iframe = document.getElementById('myIframe');
-    const wrapper = document.getElementById('iframeWrapper');
+    const iframe = document.getElementById("myIframe");
 
-    window.addEventListener('message', (event) => {
+    // Listen for messages from iframe
+    window.addEventListener("message", (event) => {
       const data = event.data;
 
-      if (data?.type === 'childHeight') {
-        iframe.style.height = data.height + 'px';
-      }
-
-      if (data?.type === 'modalOpened') {
-        const scrollTop = wrapper.scrollTop;
-        iframe.style.height = '100vh';
-
-        setTimeout(() => {
-          wrapper.scrollTop = scrollTop;
-        }, 50);
-      }
-
-      if (data?.type === 'modalClosed') {
-        iframe.contentWindow.postMessage({ type: 'getHeight' }, '*');
+      if (data?.type === "childHeight") {
+        iframe.style.height = data.height + "px";
       }
     });
   </script>
