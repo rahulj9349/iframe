@@ -2,18 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Child Page 123</title>
+  <title>Child</title>
   <style>
     body {
       margin: 0;
-      font-family: sans-serif;
+      font-family: Arial, sans-serif;
     }
 
     .section {
       height: 300px;
       padding: 20px;
+      background: #f5f5f5;
       border-bottom: 1px solid #ccc;
-      background-color: #f5f5f5;
       cursor: pointer;
     }
 
@@ -57,29 +57,27 @@
   <!-- Modal -->
   <div class="modal" id="modal">
     <div class="close-btn"><button onclick="closeModal()">Close ✖</button></div>
-    <h3>Popup Modal</h3>
-    <p>This modal is centered in the visible device area.</p>
+    <h3>Centered Modal</h3>
+    <p>Modal is centered in visible device viewport (based on parent scroll).</p>
   </div>
 
   <script>
     const modal = document.getElementById("modal");
+    let scrollYFromParent = 0;
+    let viewportHeightFromParent = 0;
 
-    let parentScrollY = 0;
-    let parentViewportHeight = 0;
-
+    // Receive scroll and viewport info from parent
     window.addEventListener("message", (event) => {
       if (event.data.type === "parent-scroll-data") {
-        parentScrollY = event.data.scrollY;
-        parentViewportHeight = event.data.viewportHeight;
-      } else if (event.data.type === "resize-iframe") {
-        sendHeight(); // optional
+        scrollYFromParent = event.data.scrollY;
+        viewportHeightFromParent = event.data.viewportHeight;
       }
     });
 
     function openModal() {
-      const modalHeight = modal.offsetHeight || 200;
-      const topOffset = parentScrollY + (parentViewportHeight - modalHeight) / 2;
-      modal.style.top = `${topOffset}px`;
+      const estimatedModalHeight = 200; // you can refine this
+      const top = scrollYFromParent + (viewportHeightFromParent - estimatedModalHeight) / 2;
+      modal.style.top = `${top}px`;
       modal.classList.add("active");
       sendHeight();
     }
@@ -91,11 +89,12 @@
 
     function sendHeight() {
       const height = document.documentElement.scrollHeight;
-      window.parent.postMessage({ type: 'resize-iframe', height }, '*');
+      window.parent.postMessage({ type: "resize-iframe", height }, "*");
     }
 
     window.addEventListener("load", sendHeight);
     window.addEventListener("resize", sendHeight);
   </script>
+
 </body>
 </html>
