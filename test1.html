@@ -69,10 +69,22 @@
     }
 
     function openPopup() {
-      document.getElementById('popupBackdrop').style.display = 'block';
-      document.getElementById('popupModal').style.display = 'block';
-      window.parent.postMessage('modalOpened', '*');
-    }
+  // Save scroll position inside the iframe BEFORE layout changes
+  const scrollTop = window.scrollY;
+
+  // Show popup
+  document.getElementById('popupBackdrop').style.display = 'block';
+  document.getElementById('popupModal').style.display = 'block';
+
+  // Notify parent to set iframe height
+  window.parent.postMessage({ type: 'modalOpened', scrollTop }, '*');
+
+  // Restore scroll after layout change
+  setTimeout(() => {
+    window.scrollTo({ top: scrollTop, behavior: 'instant' });
+  }, 100);
+}
+
 
     function closePopup() {
       document.getElementById('popupBackdrop').style.display = 'none';
