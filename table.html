@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sticky Header & Sticky Bottom Scrollbar</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+    }
+    .table-wrapper {
+      overflow-x: auto;
+      max-height: 600px; /* control table height */
+    }
+    table {
+      border-collapse: collapse;
+      width: 2000px; /* 20 columns * 100px */
+    }
+    th, td {
+      border: 1px solid #ccc;
+      width: 100px;
+      height: 100px;
+      text-align: center;
+    }
+    thead th {
+      position: sticky;
+      top: 0;
+      background: #f8f8f8;
+      z-index: 2;
+    }
+    /* Fake sticky scrollbar */
+    .table-scrollbar {
+      position: sticky;
+      bottom: 0;
+      overflow-x: auto;
+      border-top: 2px solid #ccc;
+      background: #fff;
+    }
+    .fake-scroll {
+      width: 2000px; /* same as table width */
+      height: 1px;   /* small height, just for scrollbar */
+    }
+  </style>
+</head>
+<body>
+
+  <h2 style="padding:10px;">Sticky Table Header & Sticky Scrollbar</h2>
+
+  <div class="relative">
+    <!-- Real table scroll -->
+    <div class="table-wrapper" id="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <!-- 20 headers -->
+            <th>Col 1</th>
+            <th>Col 2</th>
+            <th>Col 3</th>
+            <th>Col 4</th>
+            <th>Col 5</th>
+            <th>Col 6</th>
+            <th>Col 7</th>
+            <th>Col 8</th>
+            <th>Col 9</th>
+            <th>Col 10</th>
+            <th>Col 11</th>
+            <th>Col 12</th>
+            <th>Col 13</th>
+            <th>Col 14</th>
+            <th>Col 15</th>
+            <th>Col 16</th>
+            <th>Col 17</th>
+            <th>Col 18</th>
+            <th>Col 19</th>
+            <th>Col 20</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- 50 rows -->
+          <script>
+            for (let i = 1; i <= 50; i++) {
+              document.write("<tr>");
+              for (let j = 1; j <= 20; j++) {
+                document.write("<td>R" + i + "C" + j + "</td>");
+              }
+              document.write("</tr>");
+            }
+          </script>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Fake scrollbar -->
+    <div class="table-scrollbar" id="table-scrollbar">
+      <div class="fake-scroll"></div>
+    </div>
+  </div>
+
+  <script>
+    const wrapper = document.getElementById('table-wrapper');
+    const scrollbar = document.getElementById('table-scrollbar');
+
+    if (wrapper && scrollbar) {
+      scrollbar.addEventListener('scroll', () => {
+        wrapper.scrollLeft = scrollbar.scrollLeft;
+      });
+      wrapper.addEventListener('scroll', () => {
+        scrollbar.scrollLeft = wrapper.scrollLeft;
+      });
+    }
+  </script>
+
+</body>
+</html>
