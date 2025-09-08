@@ -2,32 +2,86 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Sticky Header & Sticky Bottom Scrollbar</title>
+  <title>Sticky Header & Sticky Bottom Scrollbar with Sidebar</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       margin: 0;
+      display: flex;
+      height: 100vh;
     }
+
+    /* Sidebar */
+    .sidebar {
+      width: 250px;
+      background: #2c3e50;
+      color: white;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    .sidebar h3 {
+      margin-top: 0;
+      margin-bottom: 20px;
+    }
+
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .sidebar ul li {
+      margin: 10px 0;
+    }
+
+    .sidebar ul li a {
+      color: #ecf0f1;
+      text-decoration: none;
+    }
+
+    .sidebar ul li a:hover {
+      text-decoration: underline;
+    }
+
+    /* Main content */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .header {
+      padding: 10px;
+      background: #f4f4f4;
+      border-bottom: 1px solid #ccc;
+    }
+
     .table-wrapper {
+      flex: 1;
       overflow-x: auto;
-      max-height: 600px; /* control table height */
+      max-height: 100%;
     }
+
     table {
       border-collapse: collapse;
       width: 2000px; /* 20 columns * 100px */
     }
+
     th, td {
       border: 1px solid #ccc;
       width: 100px;
       height: 100px;
       text-align: center;
     }
+
     thead th {
       position: sticky;
       top: 0;
       background: #f8f8f8;
       z-index: 2;
     }
+
     /* Fake sticky scrollbar */
     .table-scrollbar {
       position: sticky;
@@ -36,63 +90,64 @@
       border-top: 2px solid #ccc;
       background: #fff;
     }
+
     .fake-scroll {
       width: 2000px; /* same as table width */
-      height: 1px;   /* small height, just for scrollbar */
+      height: 1px;
     }
   </style>
 </head>
 <body>
 
-  <h2 style="padding:10px;">Sticky Table Header & Sticky Scrollbar</h2>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h3>Sidebar</h3>
+    <ul>
+      <li><a href="#">Dashboard</a></li>
+      <li><a href="#">Reports</a></li>
+      <li><a href="#">Users</a></li>
+      <li><a href="#">Settings</a></li>
+    </ul>
+  </div>
 
-  <div class="relative">
-    <!-- Real table scroll -->
-    <div class="table-wrapper" id="table-wrapper">
-      <table>
-        <thead>
-          <tr>
-            <!-- 20 headers -->
-            <th>Col 1</th>
-            <th>Col 2</th>
-            <th>Col 3</th>
-            <th>Col 4</th>
-            <th>Col 5</th>
-            <th>Col 6</th>
-            <th>Col 7</th>
-            <th>Col 8</th>
-            <th>Col 9</th>
-            <th>Col 10</th>
-            <th>Col 11</th>
-            <th>Col 12</th>
-            <th>Col 13</th>
-            <th>Col 14</th>
-            <th>Col 15</th>
-            <th>Col 16</th>
-            <th>Col 17</th>
-            <th>Col 18</th>
-            <th>Col 19</th>
-            <th>Col 20</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- 50 rows -->
-          <script>
-            for (let i = 1; i <= 50; i++) {
-              document.write("<tr>");
-              for (let j = 1; j <= 20; j++) {
-                document.write("<td>R" + i + "C" + j + "</td>");
-              }
-              document.write("</tr>");
-            }
-          </script>
-        </tbody>
-      </table>
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="header">
+      <h2>Sticky Table with Sidebar</h2>
     </div>
 
-    <!-- Fake scrollbar -->
-    <div class="table-scrollbar" id="table-scrollbar">
-      <div class="fake-scroll"></div>
+    <div class="relative" style="flex: 1; display: flex; flex-direction: column;">
+      <!-- Real table scroll -->
+      <div class="table-wrapper" id="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <!-- 20 headers -->
+              <th>Col 1</th><th>Col 2</th><th>Col 3</th><th>Col 4</th><th>Col 5</th>
+              <th>Col 6</th><th>Col 7</th><th>Col 8</th><th>Col 9</th><th>Col 10</th>
+              <th>Col 11</th><th>Col 12</th><th>Col 13</th><th>Col 14</th><th>Col 15</th>
+              <th>Col 16</th><th>Col 17</th><th>Col 18</th><th>Col 19</th><th>Col 20</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- 50 rows -->
+            <script>
+              for (let i = 1; i <= 50; i++) {
+                document.write("<tr>");
+                for (let j = 1; j <= 20; j++) {
+                  document.write("<td>R" + i + "C" + j + "</td>");
+                }
+                document.write("</tr>");
+              }
+            </script>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Fake scrollbar -->
+      <div class="table-scrollbar" id="table-scrollbar">
+        <div class="fake-scroll"></div>
+      </div>
     </div>
   </div>
 
