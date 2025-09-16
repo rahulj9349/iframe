@@ -1,57 +1,118 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Parent</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Swiper Zoom Example</title>
+  <!-- Swiper CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css">
   <style>
     body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
       margin: 0;
+      background: #f5f5f5;
     }
 
-    header, footer {
-      height: 50px;
-      background: #333;
-      color: white;
-      text-align: center;
-      line-height: 50px;
+    .swiper {
+      width: 80%;
+      height: 70vh;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
 
-    iframe {
+    .swiper-slide img {
       width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    /* Zoom control buttons */
+    .zoom-controls {
+      position: absolute;
+      bottom: 15px;
+      right: 15px;
+      display: flex;
+      gap: 10px;
+      z-index: 10;
+    }
+
+    .zoom-btn {
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
       border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      font-size: 20px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .zoom-btn:hover {
+      background: rgba(0, 0, 0, 0.8);
     }
   </style>
 </head>
 <body>
 
-  <header>Parent Header</header>
+  <!-- Swiper Container -->
+  <div class="swiper">
+    <div class="swiper-wrapper">
+      <div class="swiper-slide">
+        <div class="swiper-zoom-container">
+          <img src="https://picsum.photos/id/1018/1000/600/" alt="Image 1">
+        </div>
+      </div>
+      <div class="swiper-slide">
+        <div class="swiper-zoom-container">
+          <img src="https://picsum.photos/id/1025/1000/600/" alt="Image 2">
+        </div>
+      </div>
+      <div class="swiper-slide">
+        <div class="swiper-zoom-container">
+          <img src="https://picsum.photos/id/1003/1000/600/" alt="Image 3">
+        </div>
+      </div>
+    </div>
 
-  <iframe id="childFrame" src="test1.html"></iframe>
+    <!-- Zoom Controls -->
+    <div class="zoom-controls">
+      <button class="zoom-btn" id="zoomIn">+</button>
+      <button class="zoom-btn" id="zoomOut">-</button>
+      <button class="zoom-btn" id="resetZoom">⟳</button>
+    </div>
 
-  <footer>Parent Footer</footer>
+    <!-- Add pagination if you want -->
+    <div class="swiper-pagination"></div>
+  </div>
 
+  <!-- Swiper JS -->
+  <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
   <script>
-    const iframe = document.getElementById("childFrame");
-
-    // Resize iframe based on child height
-    window.addEventListener("message", (event) => {
-      if (event.data.type === "resize-iframe") {
-        iframe.style.height = event.data.height + "px";
-      }
+    const swiper = new Swiper('.swiper', {
+      zoom: true,
+      pagination: {
+        el: '.swiper-pagination',
+        clickable: true,
+      },
     });
 
-    // Send scroll + viewport info to child
-    function sendScrollInfo() {
-      iframe.contentWindow.postMessage({
-        type: "parent-scroll-data",
-        scrollY: window.scrollY,
-        viewportHeight: window.innerHeight
-      }, "*");
-    }
+    // Zoom control buttons
+    document.getElementById('zoomIn').addEventListener('click', () => {
+      swiper.zoom.in();
+    });
 
-    window.addEventListener("scroll", sendScrollInfo);
-    window.addEventListener("resize", sendScrollInfo);
-    window.addEventListener("load", sendScrollInfo);
+    document.getElementById('zoomOut').addEventListener('click', () => {
+      swiper.zoom.out();
+    });
+
+    document.getElementById('resetZoom').addEventListener('click', () => {
+      swiper.zoom.out(); // reset to default zoom
+    });
   </script>
 
 </body>
