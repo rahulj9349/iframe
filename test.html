@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Swiper Direct Zoom Example</title>
+  <title>Swiper Direct Zoom</title>
 
   <!-- Swiper CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
 
   <style>
-    body { display: flex; justify-content: center; align-items: center; height: 100vh; background: #f4f4f4; }
+    body { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #f4f4f4; }
     .swiper {
       width: 400px;
       height: 400px;
@@ -18,12 +18,10 @@
       background: #fff;
       box-shadow: 0px 4px 12px rgba(0,0,0,0.2);
     }
-
     .zoom-controls {
       text-align: center;
       margin-top: 10px;
     }
-
     .zoom-controls button {
       margin: 0 5px;
       padding: 6px 12px;
@@ -33,7 +31,6 @@
       border-radius: 5px;
       cursor: pointer;
     }
-
     .zoom-controls button:hover {
       background: #0056b3;
     }
@@ -41,7 +38,6 @@
 </head>
 <body>
 
-  <!-- Swiper Container -->
   <div class="swiper mySwiper">
     <div class="swiper-wrapper">
       <div class="swiper-slide">
@@ -61,25 +57,25 @@
       </div>
     </div>
 
-    <!-- Swiper Pagination & Navigation -->
     <div class="swiper-pagination"></div>
     <div class="swiper-button-next"></div>
     <div class="swiper-button-prev"></div>
   </div>
 
-  <!-- Zoom Controls -->
   <div class="zoom-controls">
     <button onclick="zoomIn()">Zoom In</button>
     <button onclick="zoomOut()">Zoom Out</button>
     <button onclick="resetZoom()">Reset</button>
   </div>
 
-  <!-- Swiper JS -->
   <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
 
   <script>
     let swiper = new Swiper(".mySwiper", {
-      zoom: true,
+      zoom: {
+        maxRatio: 3, // maximum zoom level
+        minRatio: 1, // minimum zoom level
+      },
       pagination: { el: ".swiper-pagination", clickable: true },
       navigation: { nextEl: ".swiper-button-next", prevEl: ".swiper-button-prev" },
     });
@@ -87,27 +83,31 @@
     function zoomIn() {
       const zoom = swiper.zoom;
       if (zoom) {
-        zoom.scale = 3; // direct max zoom (change number for more/less zoom)
-        zoom.currentScale = zoom.scale;
-        zoom.setTransform(swiper.zoom.currentSlideEl, `scale(${zoom.scale})`);
+        zoom.in(300); // animate zoom in
+        setTimeout(() => {
+          zoom.scale = swiper.params.zoom.maxRatio; // force max zoom
+          zoom.currentScale = zoom.scale;
+          zoom.$imageWrapEl.css('transform', `scale(${zoom.scale})`);
+        }, 300);
       }
     }
 
     function zoomOut() {
       const zoom = swiper.zoom;
       if (zoom) {
-        zoom.scale = 0.5; // direct zoom out (smaller than normal)
-        zoom.currentScale = zoom.scale;
-        zoom.setTransform(swiper.zoom.currentSlideEl, `scale(${zoom.scale})`);
+        zoom.in(300); // first zoom in a bit to activate zoom container
+        setTimeout(() => {
+          zoom.scale = 0.5; // direct small zoom out
+          zoom.currentScale = zoom.scale;
+          zoom.$imageWrapEl.css('transform', `scale(${zoom.scale})`);
+        }, 300);
       }
     }
 
     function resetZoom() {
       const zoom = swiper.zoom;
       if (zoom) {
-        zoom.scale = 1; // reset to normal
-        zoom.currentScale = zoom.scale;
-        zoom.setTransform(swiper.zoom.currentSlideEl, `scale(${zoom.scale})`);
+        zoom.out(300); // reset to original
       }
     }
   </script>
