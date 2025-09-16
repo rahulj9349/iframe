@@ -1,124 +1,102 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Swiper 3-step Zoom (fixed)</title>
-
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Swiper with 3-Step Zoom</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.css">
   <style>
-    body {
-      margin: 0;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: #f3f4f6;
+    .swiper {
+      width: 600px;
+      height: 400px;
     }
-    .mySwiper {
-      width: 80%;
-      height: 70vh;
-      background: white;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+    .swiper-slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      transition: transform 0.3s ease;
+      cursor: pointer;
     }
-    .zoom-container img {
-      max-width: 100%;
-      max-height: 100%;
-      transform-origin: center center;
-      transition: transform 180ms ease;
-      will-change: transform;
-      user-select: none;
-      -webkit-user-drag: none;
+    .zoom-controls {
+      text-align: center;
+      margin-top: 10px;
     }
-    .controls { margin-top: 10px; text-align: center; }
-    .btn {
-      margin: 0 5px;
-      padding: 6px 14px;
-      border: none;
-      background: #007bff;
-      color: white;
-      border-radius: 6px;
+    .zoom-controls button {
+      margin: 5px;
+      padding: 8px 15px;
+      font-size: 16px;
       cursor: pointer;
     }
   </style>
 </head>
 <body>
 
+  <!-- Swiper Container -->
   <div class="swiper mySwiper">
     <div class="swiper-wrapper">
-      <div class="swiper-slide"><div class="zoom-container"><img src="https://picsum.photos/id/1015/1200/800"></div></div>
-      <div class="swiper-slide"><div class="zoom-container"><img src="https://picsum.photos/id/1024/1200/800"></div></div>
-      <div class="swiper-slide"><div class="zoom-container"><img src="https://picsum.photos/id/1033/1200/800"></div></div>
+      <div class="swiper-slide"><img src="https://picsum.photos/id/1011/800/600" /></div>
+      <div class="swiper-slide"><img src="https://picsum.photos/id/1015/800/600" /></div>
+      <div class="swiper-slide"><img src="https://picsum.photos/id/1025/800/600" /></div>
     </div>
-    <div class="swiper-pagination"></div>
+
+    <!-- Swiper navigation -->
     <div class="swiper-button-next"></div>
     <div class="swiper-button-prev"></div>
   </div>
 
-  <div class="controls">
-    <button id="zoomOut" class="btn">Zoom −</button>
-    <button id="resetZoom" class="btn">Reset</button>
-    <button id="zoomIn" class="btn">Zoom +</button>
+  <!-- Zoom Controls -->
+  <div class="zoom-controls">
+    <button id="zoomIn">Zoom In</button>
+    <button id="zoomOut">Zoom Out</button>
+    <button id="resetZoom">Reset</button>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const zoomLevels = [1, 1.75, 3];
-      let levelIndex = 0;
-      let currentScale = zoomLevels[levelIndex];
-
-      let activeImg = null;
-      let tx = 0, ty = 0;
-
-      const swiper = new Swiper('.mySwiper', {
-        slidesPerView: 1,
-        pagination: { el: '.swiper-pagination', clickable: true },
-        navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
-        on: {
-          init() { setActiveImage(); },
-          slideChange() { resetZoom(); setActiveImage(); }
-        }
-      });
-
-      function setActiveImage() {
-        const slide = swiper.slides[swiper.activeIndex];
-        activeImg = slide.querySelector('.zoom-container img');
-        applyTransform();
+    // Initialize Swiper first
+    const swiper = new Swiper(".mySwiper", {
+      navigation: {
+        nextEl: ".swiper-button-next",
+        prevEl: ".swiper-button-prev"
       }
+    });
 
-      function applyTransform() {
-        if (!activeImg) return;
-        activeImg.style.transform = `translate(${tx}px,${ty}px) scale(${currentScale})`;
+    let zoomLevel = 1;           // default zoom
+    const zoomSteps = [1, 1.5, 2.5]; // 3 zoom steps
+    const zoomInBtn = document.getElementById("zoomIn");
+    const zoomOutBtn = document.getElementById("zoomOut");
+    const resetZoomBtn = document.getElementById("resetZoom");
+
+    function applyZoom() {
+      const activeSlide = swiper.slides[swiper.activeIndex];
+      const img = activeSlide.querySelector("img");
+      img.style.transform = `scale(${zoomLevel})`;
+    }
+
+    zoomInBtn.addEventListener("click", () => {
+      if (zoomLevel < zoomSteps[zoomSteps.length - 1]) {
+        zoomLevel = zoomSteps.find(step => step > zoomLevel) || zoomLevel;
+        applyZoom();
       }
+    });
 
-      function resetZoom() {
-        levelIndex = 0;
-        currentScale = zoomLevels[levelIndex];
-        tx = ty = 0;
-        applyTransform();
+    zoomOutBtn.addEventListener("click", () => {
+      if (zoomLevel > zoomSteps[0]) {
+        zoomLevel = [...zoomSteps].reverse().find(step => step < zoomLevel) || zoomLevel;
+        applyZoom();
       }
+    });
 
-      // Buttons
-      document.getElementById('zoomIn').addEventListener('click', () => {
-        if (levelIndex < zoomLevels.length - 1) levelIndex++;
-        currentScale = zoomLevels[levelIndex];
-        applyTransform();
-      });
+    resetZoomBtn.addEventListener("click", () => {
+      zoomLevel = 1;
+      applyZoom();
+    });
 
-      document.getElementById('zoomOut').addEventListener('click', () => {
-        if (levelIndex > 0) levelIndex--;
-        currentScale = zoomLevels[levelIndex];
-        applyTransform();
-      });
-
-      document.getElementById('resetZoom').addEventListener('click', resetZoom);
+    // Reset zoom whenever slide changes
+    swiper.on("slideChange", () => {
+      zoomLevel = 1;
+      applyZoom();
     });
   </script>
-
 </body>
 </html>
