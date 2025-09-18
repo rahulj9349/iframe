@@ -1,156 +1,42 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Swiper Zoom + Pan</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.css">
-  <style>
-    .swiper {
-      width: 600px;
-      height: 400px;
-      overflow: hidden;
-    }
-    .swiper-slide {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      overflow: hidden;
-    }
-    .swiper-slide img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      transition: transform 0.3s ease;
-      cursor: grab;
-      user-select: none;
-    }
-    .zoom-controls {
-      text-align: center;
-      margin-top: 10px;
-    }
-    .zoom-controls button {
-      margin: 5px;
-      padding: 8px 15px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-  </style>
+    <title>Airpay Subscription Checkout</title>
 </head>
-<body>
-
-  <!-- Swiper Container -->
-  <div class="swiper mySwiper">
-    <div class="swiper-wrapper">
-      <div class="swiper-slide"><img src="https://picsum.photos/id/1011/800/600" /></div>
-      <div class="swiper-slide"><img src="https://picsum.photos/id/1015/800/600" /></div>
-      <div class="swiper-slide"><img src="https://picsum.photos/id/1025/800/600" /></div>
-    </div>
-
-    <!-- Swiper navigation -->
-    <div class="swiper-button-next"></div>
-    <div class="swiper-button-prev"></div>
-  </div>
-
-  <!-- Zoom Controls -->
-  <div class="zoom-controls">
-    <button id="zoomIn">Zoom In</button>
-    <button id="zoomOut">Zoom Out</button>
-    <button id="resetZoom">Reset</button>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/swiper@9/swiper-bundle.min.js"></script>
-  <script>
-    const swiper = new Swiper(".mySwiper", {
-      navigation: {
-        nextEl: ".swiper-button-next",
-        prevEl: ".swiper-button-prev"
-      }
-    });
-
-    let zoomLevel = 1;
-    const zoomSteps = [1, 1.5, 2.5];
-    let translateX = 0, translateY = 0;
-    let isDragging = false, startX = 0, startY = 0;
-
-    function applyTransform() {
-      const activeSlide = swiper.slides[swiper.activeIndex];
-      const img = activeSlide.querySelector("img");
-      img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${zoomLevel})`;
-    }
-
-    function resetTransform() {
-      zoomLevel = 1;
-      translateX = 0;
-      translateY = 0;
-      applyTransform();
-    }
-
-    document.getElementById("zoomIn").addEventListener("click", () => {
-      if (zoomLevel < zoomSteps[zoomSteps.length - 1]) {
-        zoomLevel = zoomSteps.find(step => step > zoomLevel) || zoomLevel;
-        applyTransform();
-      }
-    });
-
-    document.getElementById("zoomOut").addEventListener("click", () => {
-      if (zoomLevel > zoomSteps[0]) {
-        zoomLevel = [...zoomSteps].reverse().find(step => step < zoomLevel) || zoomLevel;
-        if (zoomLevel === 1) {
-          translateX = 0;
-          translateY = 0;
-        }
-        applyTransform();
-      }
-    });
-
-    document.getElementById("resetZoom").addEventListener("click", resetTransform);
-
-    swiper.on("slideChange", resetTransform);
-
-    // Enable Drag/Pan functionality
-    document.querySelectorAll(".swiper-slide img").forEach(img => {
-      img.addEventListener("mousedown", e => {
-        if (zoomLevel > 1) {
-          isDragging = true;
-          img.style.cursor = "grabbing";
-          startX = e.clientX - translateX;
-          startY = e.clientY - translateY;
-        }
-      });
-
-      window.addEventListener("mousemove", e => {
-        if (!isDragging) return;
-        translateX = e.clientX - startX;
-        translateY = e.clientY - startY;
-        applyTransform();
-      });
-
-      window.addEventListener("mouseup", () => {
-        isDragging = false;
-        img.style.cursor = "grab";
-      });
-
-      // Touch support for mobile
-      img.addEventListener("touchstart", e => {
-        if (zoomLevel > 1) {
-          isDragging = true;
-          startX = e.touches[0].clientX - translateX;
-          startY = e.touches[0].clientY - translateY;
-        }
-      });
-
-      img.addEventListener("touchmove", e => {
-        if (!isDragging) return;
-        translateX = e.touches[0].clientX - startX;
-        translateY = e.touches[0].clientY - startY;
-        applyTransform();
-      });
-
-      img.addEventListener("touchend", () => {
-        isDragging = false;
-      });
-    });
-  </script>
+<body onload="document.forms['airpay_form'].submit()">
+    <p>Redirecting to Airpay, please wait...</p>
+    <form name="airpay_form" method="post" action="https://payments.airpay.co.in/pay/index.php">
+                    <input type="hidden" name="privatekey" value="dd50ea3502efab8409a6855f377c0bdff44f978a99e71d96ca33b1f861383d1f">
+                    <input type="hidden" name="mercid" value="21720">
+                    <input type="hidden" name="orderid" value="Hello123">
+                    <input type="hidden" name="currency" value="356">
+                    <input type="hidden" name="isocurrency" value="INR">
+                    <input type="hidden" name="chmod" value="enach">
+                    <input type="hidden" name="buyerEmail" value="dsoft.php3@gmail.com">
+                    <input type="hidden" name="buyerPhone" value="09428908916">
+                    <input type="hidden" name="buyerFirstName" value="Chirag">
+                    <input type="hidden" name="buyerLastName" value="Shah">
+                    <input type="hidden" name="buyerAddress" value="I-93/1585 Krishna nagar, G.H.B.">
+                    <input type="hidden" name="buyerCity" value="Ahmedabad">
+                    <input type="hidden" name="buyerState" value="Gujarat">
+                    <input type="hidden" name="buyerCountry" value="India">
+                    <input type="hidden" name="buyerPinCode" value="382345">
+                    <input type="hidden" name="amount" value="500.00">
+                    <input type="hidden" name="paymode" value="enach">
+                    <input type="hidden" name="token" value="">
+                    <input type="hidden" name="sb_nextrundate" value="20/10/2025">
+                    <input type="hidden" name="sb_period" value="W">
+                    <input type="hidden" name="sb_frequency" value="1">
+                    <input type="hidden" name="sb_maxamount" value="5000.00">
+                    <input type="hidden" name="sb_amount" value="500.00">
+                    <input type="hidden" name="customvar" value="digigold_dev3">
+                    <input type="hidden" name="sb_isrecurring" value="1">
+                    <input type="hidden" name="sb_recurringcount" value="60">
+                    <input type="hidden" name="sb_retryattempts" value="0">
+                    <input type="hidden" name="txnsubtype" value="12">
+                    <input type="hidden" name="UID" value="">
+                    <input type="hidden" name="arpyVer" value="">
+                    <input type="hidden" name="checksum" value="fc929e1ff64565a8009f05cd295527033d3b9144da7fddcbf37d93f3a3868673">
+            </form>
 </body>
 </html>
