@@ -1,0 +1,227 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Images → Video (WebM)</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; padding: 18px; max-width: 900px; margin: auto; }
+    label { display:block; margin-top:10px; font-weight:600; }
+    input, select, button { margin-top:6px; }
+    .controls { display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
+    .canvas-wrap { border:1px solid #ddd; display:inline-block; margin-top:12px; }
+    video { max-width:100%; height:auto; display:block; margin-top:12px; }
+    .status { margin-top:8px; color:#555; }
+  </style>
+</head>
+<body>
+  <h1>Make a Video from Images (WebM)</h1>
+
+  <label>Choose images (multiple, in order):</label>
+  <input id="files" type="file" accept="image/*" multiple>
+
+  <div class="controls">
+    <div>
+      <label>FPS:</label>
+      <input id="fps" type="number" value="30" min="1" max="60">
+    </div>
+
+    <div>
+      <label>Seconds per image:</label>
+      <input id="secs" type="number" value="2" min="0.1" step="0.1">
+    </div>
+
+    <div>
+      <label>Width:</label>
+      <input id="width" type="number" value="1280" min="16">
+    </div>
+
+    <div>
+      <label>Height:</label>
+      <input id="height" type="number" value="720" min="16">
+    </div>
+
+    <div>
+      <label>Fit mode:</label>
+      <select id="fit">
+        <option value="contain">Contain (letterbox)</option>
+        <option value="cover">Cover (crop)</option>
+      </select>
+    </div>
+
+    <div style="align-self:end">
+      <button id="create">Create video</button>
+    </div>
+  </div>
+
+  <div class="canvas-wrap">
+    <canvas id="canvas" width="640" height="360" style="display:block;"></canvas>
+  </div>
+
+  <div class="status" id="status">Status: waiting for images</div>
+
+  <h3>Preview / Download</h3>
+  <video id="preview" controls></video>
+  <a id="download" style="display:inline-block; margin-top:8px;" href="#" download="images-video.webm">Download video</a>
+
+  <script>
+    // Helpers
+    const $ = id => document.getElementById(id);
+    const status = txt => { $('status').textContent = 'Status: ' + txt; };
+
+    // Load images as HTMLImageElement in order
+    async function loadImages(files) {
+      const list = Array.from(files);
+      list.sort((a,b) => Array.from(files).indexOf(a) - Array.from(files).indexOf(b)); // keep order
+      const images = [];
+      for (const f of list) {
+        const url = URL.createObjectURL(f);
+        const img = await new Promise((res, rej) => {
+          const i = new Image();
+          i.onload = () => { URL.revokeObjectURL(url); res(i); };
+          i.onerror = (e) => { URL.revokeObjectURL(url); rej(e); };
+          i.src = url;
+        });
+        images.push(img);
+      }
+      return images;
+    }
+
+    // Draw image into canvas based on 'fit' and target canvas dimensions
+    function drawImageFit(ctx, img, cw, ch, fit='contain') {
+      const iw = img.width, ih = img.height;
+      const cr = cw / ch;
+      const ir = iw / ih;
+
+      let sx=0, sy=0, sw=iw, sh=ih, dx=0, dy=0, dw=cw, dh=ch;
+
+      if (fit === 'cover') {
+        // scale to cover -> crop center
+        if (ir > cr) {
+          // image is wider, crop sideways
+          sw = ih * cr;
+          sx = (iw - sw) / 2;
+        } else {
+          // image is taller, crop top/bottom
+          sh = iw / cr;
+          sy = (ih - sh) / 2;
+        }
+        // draw the cropped region stretched to canvas
+        ctx.drawImage(img, sx, sy, sw, sh, 0, 0, cw, ch);
+      } else {
+        // contain -> letterbox with background
+        const scale = Math.min(cw / iw, ch / ih);
+        dw = Math.round(iw * scale);
+        dh = Math.round(ih * scale);
+        dx = Math.round((cw - dw) / 2);
+        dy = Math.round((ch - dh) / 2);
+        // clear with black
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0,0,cw,ch);
+        ctx.drawImage(img, 0, 0, iw, ih, dx, dy, dw, dh);
+      }
+    }
+
+    // Main create video function
+    async function createVideoFromImages(images, opts) {
+      const { fps, secsPerImage, width, height, fit } = opts;
+      const canvas = $('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+
+      const stream = canvas.captureStream(fps);
+      let mime = 'video/webm;codecs=vp9';
+      if (!MediaRecorder.isTypeSupported(mime)) {
+        mime = 'video/webm;codecs=vp8';
+        if (!MediaRecorder.isTypeSupported(mime)) mime = 'video/webm';
+      }
+
+      const recorder = new MediaRecorder(stream, { mimeType: mime });
+      const chunks = [];
+      recorder.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+
+      return new Promise((resolve, reject) => {
+        recorder.onerror = e => reject(e);
+        recorder.onstop = () => {
+          const blob = new Blob(chunks, { type: 'video/webm' });
+          resolve(blob);
+        };
+
+        // Prepare drawing loop
+        const totalFramesPerImage = Math.max(1, Math.round(fps * secsPerImage));
+        const totalFrames = totalFramesPerImage * images.length;
+        let frame = 0;
+
+        // Start recorder
+        recorder.start();
+
+        status('Recording… 0%');
+        // Draw initial frame immediately for some browsers to capture
+        drawImageFit(ctx, images[0], width, height, fit);
+
+        const intervalMs = 1000 / fps;
+        const timer = setInterval(() => {
+          const imageIndex = Math.min(images.length - 1, Math.floor(frame / totalFramesPerImage));
+          const img = images[imageIndex];
+          drawImageFit(ctx, img, width, height, fit);
+
+          frame++;
+          const pct = Math.round((frame / totalFrames) * 100);
+          status(`Recording… ${Math.min(pct,100)}%`);
+
+          if (frame >= totalFrames) {
+            clearInterval(timer);
+            // give MediaRecorder a tiny moment to capture last frames
+            setTimeout(() => {
+              try { recorder.stop(); } catch (err) { reject(err); }
+            }, 150);
+          }
+        }, intervalMs);
+      });
+    }
+
+    // Wire UI
+    $('create').addEventListener('click', async () => {
+      const files = $('files').files;
+      if (!files || files.length === 0) { alert('Please select one or more images.'); return; }
+
+      const fps = Number($('fps').value) || 30;
+      const secs = Math.max(0.01, Number($('secs').value) || 2);
+      const width = Math.max(16, Number($('width').value) || 1280);
+      const height = Math.max(16, Number($('height').value) || 720);
+      const fit = $('fit').value;
+
+      $('create').disabled = true;
+      status('Loading images...');
+      try {
+        const images = await loadImages(files);
+        status('Images loaded. Creating video…');
+        const blob = await createVideoFromImages(images, { fps, secsPerImage: secs, width, height, fit });
+
+        const url = URL.createObjectURL(blob);
+        const preview = $('preview');
+        preview.src = url;
+        preview.play().catch(()=>{ /* ignore autoplay */ });
+
+        const download = $('download');
+        download.href = url;
+        download.download = `images-to-video_${Date.now()}.webm`;
+        download.style.display = 'inline-block';
+        status('Done — preview ready. Click Download to save (.webm)');
+      } catch (err) {
+        console.error(err);
+        alert('Error creating video: ' + (err && err.message ? err.message : err));
+        status('Error');
+      } finally {
+        $('create').disabled = false;
+      }
+    });
+
+    // small UX: hide download initially
+    $('download').style.display = 'none';
+    status('waiting for images');
+  </script>
+</body>
+</html>
