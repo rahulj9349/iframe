@@ -2,74 +2,104 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Summernote Editor with Preview</title>
-
-  <!-- Bootstrap 4 -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-  <!-- Summernote BS4 CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.css" rel="stylesheet">
+  <title>Simple Rich Text Editor</title>
 
   <style>
     body {
+      font-family: Arial, sans-serif;
+      background: #f7f7f7;
       padding: 20px;
+    }
+
+    .toolbar {
+      margin-bottom: 8px;
+    }
+
+    .toolbar button {
+      padding: 6px 12px;
+      margin-right: 5px;
+      border: 1px solid #ccc;
+      background: #fff;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .toolbar button:hover {
+      background: #eee;
+    }
+
+    .editor {
+      border: 1px solid #ccc;
+      min-height: 150px;
+      padding: 10px;
+      background: #fff;
+      outline: none;
     }
 
     .preview-box {
       border: 1px solid #ccc;
-      min-height: 200px;
-      padding: 15px;
+      min-height: 150px;
+      padding: 10px;
       background: #fff;
+    }
+
+    textarea {
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    h4 {
+      margin-top: 20px;
     }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <div class="row">
+  <h3>Rich Text Editor (Only Bold / Italic / Underline)</h3>
 
-      <!-- ✅ Editor -->
-      <div class="col-md-6">
-        <h4>Summernote Editor</h4>
-        <textarea id="editor"></textarea>
-      </div>
-
-      <!-- ✅ Preview -->
-      <div class="col-md-6">
-        <h4>Live Preview</h4>
-
-        <!-- IMPORTANT: same Summernote container -->
-        <div class="note-editor note-frame">
-          <div class="note-editable preview-box" id="preview"></div>
-        </div>
-      </div>
-
-    </div>
+  <!-- ✅ Toolbar -->
+  <div class="toolbar">
+    <button onclick="formatText('bold')"><b>B</b></button>
+    <button onclick="formatText('italic')"><i>I</i></button>
+    <button onclick="formatText('underline')"><u>U</u></button>
   </div>
 
-  <!-- jQuery -->
-  <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+  <!-- ✅ Editable Area -->
+  <div 
+    id="editor" 
+    class="editor" 
+    contenteditable="true" 
+    placeholder="Type here..."
+    oninput="updatePreview()"
+    onpaste="handlePaste(event)">
+  </div>
 
-  <!-- Bootstrap JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+  <h4>Live Preview</h4>
+  <div class="preview-box" id="preview"></div>
 
-  <!-- Summernote JS -->
-  <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.js"></script>
+  <h4>Generated Rich Text HTML</h4>
+  <textarea id="htmlOutput" rows="6" readonly></textarea>
 
   <script>
-    $(document).ready(function () {
+    // ✅ Apply formatting
+    function formatText(command) {
+      document.execCommand(command, false, null);
+      updatePreview();
+    }
 
-      $('#editor').summernote({
-        height: 250,
-        callbacks: {
-          onChange: function (contents) {
-            // ✅ Live preview same as saved data
-            $('#preview').html(contents);
-          }
-        }
-      });
+    // ✅ Live preview + HTML output
+    function updatePreview() {
+      let html = document.getElementById('editor').innerHTML;
+      document.getElementById('preview').innerHTML = html;
+      document.getElementById('htmlOutput').value = html;
+    }
 
-    });
+    // ✅ Clean paste: allow only plain text
+    function handlePaste(e) {
+      e.preventDefault();
+      const text = (e.clipboardData || window.clipboardData).getData('text');
+      document.execCommand('insertText', false, text);
+    }
   </script>
 
 </body>
