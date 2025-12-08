@@ -1,462 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Video Camera</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8">
+  <title>Summernote Editor with Preview</title>
 
-        body {
-            font-family: Arial, sans-serif;
-            background: #000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 20px;
-            color: white;
-        }
+  <!-- Bootstrap 4 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
-        .video-container {
-            position: relative;
-            width: 100%;
-            max-width: 800px;
-            background: #222;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            min-height: 400px;
-        }
+  <!-- Summernote BS4 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.css" rel="stylesheet">
 
-        #video {
-            width: 100%;
-            height: 400px;
-            display: block;
-            background: #000;
-            object-fit: cover;
-        }
+  <style>
+    body {
+      padding: 20px;
+    }
 
-        .controls {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 15px;
-            z-index: 10;
-        }
-
-        .btn {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 25px;
-            background: rgba(255, 255, 255, 0.9);
-            color: #333;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            backdrop-filter: blur(10px);
-        }
-
-        .btn:hover {
-            background: rgba(255, 255, 255, 1);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-        }
-
-        .btn:active {
-            transform: translateY(0);
-        }
-
-        .toggle-camera {
-            background: rgba(33, 150, 243, 0.9);
-            color: white;
-        }
-
-        .toggle-camera:hover {
-            background: rgba(33, 150, 243, 1);
-        }
-
-        .start-btn {
-            background: rgba(76, 175, 80, 0.9);
-            color: white;
-        }
-
-        .start-btn:hover {
-            background: rgba(76, 175, 80, 1);
-        }
-
-        .stop-btn {
-            background: rgba(244, 67, 54, 0.9);
-            color: white;
-        }
-
-        .stop-btn:hover {
-            background: rgba(244, 67, 54, 1);
-        }
-
-        .status {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            backdrop-filter: blur(10px);
-        }
-
-        .error {
-            color: #ff6b6b;
-            text-align: center;
-            margin-top: 20px;
-            padding: 15px;
-            background: rgba(255, 107, 107, 0.1);
-            border-radius: 8px;
-            border: 1px solid rgba(255, 107, 107, 0.3);
-        }
-
-        /* Mobile specific styles */
-        @media (max-width: 768px) {
-            body {
-                padding: 10px;
-            }
-
-            .video-container {
-                border-radius: 8px;
-            }
-
-            .controls {
-                bottom: 15px;
-                gap: 10px;
-            }
-
-            .btn {
-                padding: 10px 16px;
-                font-size: 14px;
-            }
-
-            .status {
-                top: 15px;
-                left: 15px;
-                font-size: 12px;
-            }
-        }
-
-        /* Hide toggle button on desktop */
-        @media (min-width: 769px) {
-            .toggle-camera {
-                display: none;
-            }
-        }
-
-        /* Loading animation */
-        .loading {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 400px;
-            color: white;
-            font-size: 18px;
-        }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-top: 4px solid white;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-right: 15px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .debug-info {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            font-size: 12px;
-            max-width: 300px;
-            z-index: 1000;
-        }
-    </style>
+    .preview-box {
+      border: 1px solid #ccc;
+      min-height: 200px;
+      padding: 15px;
+      background: #fff;
+    }
+  </style>
 </head>
 <body>
-    <div id="debugInfo" class="debug-info">
-        Debug: Initializing...
-    </div>
 
-    <div class="video-container">
-        <div id="loading" class="loading">
-            <div class="spinner"></div>
-            <span>Initializing camera...</span>
+  <div class="container">
+    <div class="row">
+
+      <!-- ✅ Editor -->
+      <div class="col-md-6">
+        <h4>Summernote Editor</h4>
+        <textarea id="editor"></textarea>
+      </div>
+
+      <!-- ✅ Preview -->
+      <div class="col-md-6">
+        <h4>Live Preview</h4>
+
+        <!-- IMPORTANT: same Summernote container -->
+        <div class="note-editor note-frame">
+          <div class="note-editable preview-box" id="preview"></div>
         </div>
-        
-        <video id="video" autoplay muted playsinline style="display: none;"></video>
-        
-        <div class="status" id="status">Camera: Off</div>
-        
-        <div class="controls">
-            <button id="startBtn" class="btn start-btn">
-                📹 Start Camera
-            </button>
-            
-            <button id="stopBtn" class="btn stop-btn" style="display: none;">
-                ⏹️ Stop Camera
-            </button>
-            
-            <button id="toggleBtn" class="btn toggle-camera" style="display: none;">
-                🔄 Flip Camera
-            </button>
-        </div>
+      </div>
+
     </div>
+  </div>
 
-    <div id="error" class="error" style="display: none;"></div>
+  <!-- jQuery -->
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
 
-    <script>
-        class VideoCamera {
-            constructor() {
-                this.video = document.getElementById('video');
-                this.startBtn = document.getElementById('startBtn');
-                this.stopBtn = document.getElementById('stopBtn');
-                this.toggleBtn = document.getElementById('toggleBtn');
-                this.status = document.getElementById('status');
-                this.error = document.getElementById('error');
-                this.loading = document.getElementById('loading');
-                this.debugInfo = document.getElementById('debugInfo');
-                
-                this.stream = null;
-                this.currentFacingMode = 'user'; // 'user' for front, 'environment' for back
-                this.isMobile = this.detectMobile();
-                
-                this.init();
-            }
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 
-            detectMobile() {
-                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-                this.debug(`Mobile detected: ${isMobile}`);
-                return isMobile;
-            }
+  <!-- Summernote JS -->
+  <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-bs4.min.js"></script>
 
-            debug(message) {
-                console.log(message);
-                if (this.debugInfo) {
-                    this.debugInfo.innerHTML += '<br>' + message;
-                }
-            }
-            init() {
-                this.debug('Initializing VideoCamera...');
-                
-                // Check if getUserMedia is supported
-                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                    this.showError('Camera not supported in this browser');
-                    this.debug('getUserMedia not supported');
-                    return;
-                }
-                
-                this.startBtn.addEventListener('click', () => this.startCamera());
-                this.stopBtn.addEventListener('click', () => this.stopCamera());
-                this.toggleBtn.addEventListener('click', () => this.toggleCamera());
-                
-                // Show toggle button only on mobile
-                if (this.isMobile) {
-                    this.toggleBtn.style.display = 'flex';
-                    this.debug('Mobile toggle button enabled');
-                }
-                
-                this.updateStatus('Camera: Off');
-                this.hideLoading();
-                this.debug('Initialization complete');
-            }
+  <script>
+    $(document).ready(function () {
 
-            async startCamera() {
-                try {
-                    this.debug('Starting camera...');
-                    this.showLoading('Starting camera...');
-                    this.hideError();
-                    
-                    // Simple constraints first
-                    let constraints = {
-                        video: {
-                            facingMode: this.currentFacingMode
-                        },
-                        audio: false
-                    };
-                    
-                    this.debug(`Requesting camera with facingMode: ${this.currentFacingMode}`);
-
-                    this.stream = await navigator.mediaDevices.getUserMedia(constraints);
-                    this.debug('Camera stream obtained successfully');
-                    
-                    this.video.srcObject = this.stream;
-                    
-                    // Wait for video to load
-                    await new Promise((resolve, reject) => {
-                        this.video.onloadedmetadata = () => {
-                            this.debug('Video metadata loaded');
-                            resolve();
-                        };
-                        this.video.onerror = (e) => {
-                            this.debug('Video error: ' + e.message);
-                            reject(e);
-                        };
-                        // Timeout after 5 seconds
-                        setTimeout(() => reject(new Error('Video load timeout')), 5000);
-                    });
-                    
-                    this.video.style.display = 'block';
-                    this.startBtn.style.display = 'none';
-                    this.stopBtn.style.display = 'flex';
-                    
-                    if (this.isMobile) {
-                        this.toggleBtn.style.display = 'flex';
-                    }
-                    
-                    this.updateStatus(`Camera: On (${this.currentFacingMode === 'user' ? 'Front' : 'Back'})`);
-                    this.hideLoading();
-                    this.debug('Camera started successfully');
-                    
-                } catch (error) {
-                    console.error('Error starting camera:', error);
-                    this.debug('Camera error: ' + error.message);
-                    this.showError('Failed to start camera: ' + error.message);
-                    this.hideLoading();
-                    
-                    // Try with basic constraints if advanced ones fail
-                    if (error.name === 'OverconstrainedError') {
-                        this.debug('Trying with basic constraints...');
-                        try {
-                            const basicConstraints = { video: true, audio: false };
-                            this.stream = await navigator.mediaDevices.getUserMedia(basicConstraints);
-                            this.video.srcObject = this.stream;
-                            this.video.style.display = 'block';
-                            this.startBtn.style.display = 'none';
-                            this.stopBtn.style.display = 'flex';
-                            this.updateStatus('Camera: On (Basic)');
-                            this.hideLoading();
-                            this.hideError();
-                            this.debug('Basic camera started successfully');
-                        } catch (basicError) {
-                            this.debug('Basic camera also failed: ' + basicError.message);
-                        }
-                    }
-                }
-            }
-
-            stopCamera() {
-                this.debug('Stopping camera...');
-                if (this.stream) {
-                    this.stream.getTracks().forEach(track => track.stop());
-                    this.stream = null;
-                    this.debug('Camera stream stopped');
-                }
-                
-                this.video.srcObject = null;
-                this.video.style.display = 'none';
-                this.startBtn.style.display = 'flex';
-                this.stopBtn.style.display = 'none';
-                this.toggleBtn.style.display = 'none';
-                
-                this.updateStatus('Camera: Off');
-            }
-
-            async toggleCamera() {
-                if (!this.isMobile || !this.stream) return;
-                
-                try {
-                    this.debug('Toggling camera...');
-                    this.showLoading('Switching camera...');
-                    
-                    // Stop current stream
-                    this.stream.getTracks().forEach(track => track.stop());
-                    
-                    // Toggle facing mode
-                    this.currentFacingMode = this.currentFacingMode === 'user' ? 'environment' : 'user';
-                    this.debug(`Switching to: ${this.currentFacingMode}`);
-                    
-                    // Start new stream with new facing mode
-                    const constraints = {
-                        video: {
-                            facingMode: this.currentFacingMode
-                        },
-                        audio: false
-                    };
-
-                    this.stream = await navigator.mediaDevices.getUserMedia(constraints);
-                    this.video.srcObject = this.stream;
-                    
-                    this.updateStatus(`Camera: On (${this.currentFacingMode === 'user' ? 'Front' : 'Back'})`);
-                    this.hideLoading();
-                    this.debug('Camera toggle successful');
-                    
-                } catch (error) {
-                    console.error('Error toggling camera:', error);
-                    this.debug('Toggle error: ' + error.message);
-                    this.showError('Failed to switch camera: ' + error.message);
-                    this.hideLoading();
-                    
-                    // Revert to previous facing mode
-                    this.currentFacingMode = this.currentFacingMode === 'user' ? 'environment' : 'user';
-                }
-            }
-
-            updateStatus(message) {
-                this.status.textContent = message;
-                this.debug('Status: ' + message);
-            }
-
-            showError(message) {
-                this.error.textContent = message;
-                this.error.style.display = 'block';
-                this.debug('Error: ' + message);
-            }
-
-            hideError() {
-                this.error.style.display = 'none';
-            }
-
-            showLoading(message = 'Loading...') {
-                this.loading.querySelector('span').textContent = message;
-                this.loading.style.display = 'flex';
-                this.video.style.display = 'none';
-            }
-
-            hideLoading() {
-                this.loading.style.display = 'none';
-            }
+      $('#editor').summernote({
+        height: 250,
+        callbacks: {
+          onChange: function (contents) {
+            // ✅ Live preview same as saved data
+            $('#preview').html(contents);
+          }
         }
+      });
 
-        // Initialize when page loads
-        document.addEventListener('DOMContentLoaded', () => {
-            window.videoCamera = new VideoCamera();
-        });
+    });
+  </script>
 
-        // Handle page unload
-        window.addEventListener('beforeunload', () => {
-            if (window.videoCamera && window.videoCamera.stream) {
-                window.videoCamera.stream.getTracks().forEach(track => track.stop());
-            }
-        });
-    </script>
 </body>
 </html>
