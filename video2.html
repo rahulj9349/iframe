@@ -1,22 +1,14 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Redirecting to PhonePe</title>
-</head>
 <body>
 
-<p>Redirecting to PhonePe.......</p>
+<h3>PhonePe AutoPay</h3>
 
-<script>
-  window.location.href =
-    "ppesim://mandate?pa=TRISHTYUAT@ybl&pn=SUBSCRIBEMID&am=100000&mam=&tr=OM2602101555394828587566";
+<a href="ppesim://mandate?pa=TRISHTYUAT@ybl&pn=SUBSCRIBEMID&am=100000&mam=&tr=OM2602101555394828587566">
+  Tap here to approve AutoPay in PhonePe
+</a>
 
-  setTimeout(function () {
-    document.body.innerHTML =
-      "<p>PhonePe app not found. Please install PhonePe.</p>";
-  }, 2000);
-</script>
+<p>If PhonePe does not open, please install or update the PhonePe app.</p>
 
 </body>
 </html>
