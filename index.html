@@ -5,7 +5,7 @@
   <title>Counter UI</title>
   <style>
     :root {
-      --primary: #9d002b; /* change root color here */
+      --primary: #9d002b;
     }
 
     .counter {
@@ -20,6 +20,7 @@
     .btn {
       width: 40px;
       height: 40px;
+      margin: 2px; /* added */
       border: none;
       background: var(--primary);
       color: #fff;
@@ -31,12 +32,13 @@
       justify-content: center;
     }
 
-    .btn:active {
-      transform: scale(0.95);
+    .btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
     }
 
     .value {
-      padding: 0 15px;
+      padding: 0 10px;
       font-size: 16px;
       min-width: 30px;
       text-align: center;
@@ -47,25 +49,37 @@
 <body>
 
 <div class="counter">
-  <button class="btn" onclick="decrease()">-</button>
-  <div class="value" id="value">5</div>
-  <button class="btn" onclick="increase()">+</button>
+  <button class="btn" id="decreaseBtn" onclick="decrease()">-</button>
+  <div class="value" id="value">1</div>
+  <button class="btn" id="increaseBtn" onclick="increase()">+</button>
 </div>
 
 <script>
-  let count = 5;
+  let count = 1;
+
+  function updateButtons() {
+    document.getElementById("decreaseBtn").disabled = count <= 1;
+    document.getElementById("increaseBtn").disabled = count >= 9;
+  }
 
   function increase() {
-    count++;
-    document.getElementById("value").innerText = count;
+    if (count < 9) {
+      count++;
+      document.getElementById("value").innerText = count;
+      updateButtons();
+    }
   }
 
   function decrease() {
-    if (count > 0) {
+    if (count > 1) {
       count--;
       document.getElementById("value").innerText = count;
+      updateButtons();
     }
   }
+
+  // initialize state
+  updateButtons();
 </script>
 
 </body>
