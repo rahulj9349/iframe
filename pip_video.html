@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Floating Video</title>
+
+<style>
+
+body{
+    margin:0;
+    min-height:200vh;
+    background:#f5f5f5;
+    font-family:Arial,sans-serif;
+}
+
+/* ==================================
+   PIP CONTAINER
+================================== */
+
+.pip-video{
+    position:fixed;
+    right:15px;
+    bottom:15px;
+    z-index:999999;
+    background:#000;
+    border-radius:16px;
+    overflow:hidden;
+    box-shadow:0 10px 35px rgba(0,0,0,.25);
+    touch-action:none;
+    user-select:none;
+    -webkit-user-select:none;
+}
+
+/* Horizontal Video */
+
+.pip-video.horizontal{
+    width:clamp(240px,28vw,380px);
+    aspect-ratio:16/9;
+}
+
+/* Vertical Video */
+
+.pip-video.vertical{
+    width:clamp(170px,18vw,240px);
+    aspect-ratio:9/16;
+}
+
+.pip-video video{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+}
+
+/* ==================================
+   CONTROLS
+================================== */
+
+.pip-controls{
+    position:absolute;
+    left:0;
+    right:0;
+    bottom:0;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    padding:8px 10px;
+
+    background:linear-gradient(
+        transparent,
+        rgba(0,0,0,.8)
+    );
+}
+
+.timer{
+    color:#fff;
+    font-size:12px;
+    font-weight:600;
+}
+
+.controls-right{
+    display:flex;
+    align-items:center;
+    gap:6px;
+}
+
+.pip-btn{
+    width:34px;
+    height:34px;
+
+    border:none;
+    border-radius:50%;
+
+    background:rgba(255,255,255,.15);
+
+    color:#fff;
+    cursor:pointer;
+
+    transition:.2s;
+}
+
+.pip-btn:hover{
+    background:rgba(255,255,255,.3);
+}
+
+/* ==================================
+   MOBILE
+================================== */
+
+@media(max-width:768px){
+
+    .pip-video.horizontal{
+        width:min(90vw,260px);
+    }
+
+    .pip-video.vertical{
+        width:min(48vw,180px);
+    }
+
+}
+
+</style>
+</head>
+<body>
+
+<h2 style="padding:20px">
+    Floating Video Demo
+</h2>
+
+<!-- Change horizontal -> vertical -->
+
+<div class="pip-video horizontal" id="pipVideo">
+
+    <video
+        id="pipPlayer"
+        autoplay
+        muted
+        loop
+        playsinline>
+
+        <source
+            src="https://www.w3schools.com/html/mov_bbb.mp4"
+            type="video/mp4">
+
+    </video>
+
+    <div class="pip-controls">
+
+        <div class="timer" id="videoTimer">
+            00:00
+        </div>
+
+        <div class="controls-right">
+
+            <button
+                class="pip-btn"
+                id="playPauseBtn">
+                ⏸
+            </button>
+
+            <button
+                class="pip-btn"
+                id="fullscreenBtn">
+                ⛶
+            </button>
+
+            <button
+                class="pip-btn"
+                id="closeBtn">
+                ✕
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+const pip = document.getElementById('pipVideo');
+const video = document.getElementById('pipPlayer');
+
+const playPauseBtn = document.getElementById('playPauseBtn');
+const fullscreenBtn = document.getElementById('fullscreenBtn');
+const closeBtn = document.getElementById('closeBtn');
+const timer = document.getElementById('videoTimer');
+
+/* ==========================
+   PLAY / PAUSE
+========================== */
+
+playPauseBtn.addEventListener('click', () => {
+
+    if(video.paused){
+
+        video.play();
+        playPauseBtn.innerHTML='⏸';
+
+    }else{
+
+        video.pause();
+        playPauseBtn.innerHTML='▶';
+
+    }
+
+});
+
+/* ==========================
+   FULL SCREEN
+========================== */
+
+fullscreenBtn.addEventListener('click', () => {
+
+    if(video.requestFullscreen){
+        video.requestFullscreen();
+    }
+
+});
+
+/* ==========================
+   CLOSE
+========================== */
+
+closeBtn.addEventListener('click', () => {
+
+    pip.style.display='none';
+
+});
+
+/* ==========================
+   TIMER
+========================== */
+
+video.addEventListener('timeupdate', () => {
+
+    const mins =
+        Math.floor(video.currentTime/60);
+
+    const secs =
+        Math.floor(video.currentTime%60);
+
+    timer.innerHTML =
+        String(mins).padStart(2,'0')
+        +
+        ':'
+        +
+        String(secs).padStart(2,'0');
+
+});
+
+/* ==========================
+   DRAG SUPPORT
+========================== */
+
+let dragging=false;
+let offsetX=0;
+let offsetY=0;
+
+/* Desktop */
+
+pip.addEventListener('mousedown', startDrag);
+document.addEventListener('mousemove', drag);
+document.addEventListener('mouseup', stopDrag);
+
+/* Mobile */
+
+pip.addEventListener(
+    'touchstart',
+    startDragTouch,
+    {passive:false}
+);
+
+document.addEventListener(
+    'touchmove',
+    dragTouch,
+    {passive:false}
+);
+
+document.addEventListener(
+    'touchend',
+    stopDrag
+);
+
+function startDrag(e){
+
+    dragging=true;
+
+    offsetX=e.clientX-pip.offsetLeft;
+    offsetY=e.clientY-pip.offsetTop;
+}
+
+function startDragTouch(e){
+
+    if(!e.touches.length) return;
+
+    dragging=true;
+
+    const touch=e.touches[0];
+
+    offsetX=
+        touch.clientX-pip.offsetLeft;
+
+    offsetY=
+        touch.clientY-pip.offsetTop;
+}
+
+function drag(e){
+
+    if(!dragging) return;
+
+    movePip(
+        e.clientX,
+        e.clientY
+    );
+}
+
+function dragTouch(e){
+
+    if(!dragging) return;
+
+    e.preventDefault();
+
+    const touch=e.touches[0];
+
+    movePip(
+        touch.clientX,
+        touch.clientY
+    );
+}
+
+function movePip(clientX,clientY){
+
+    let left=
+        clientX-offsetX;
+
+    let top=
+        clientY-offsetY;
+
+    const maxLeft=
+        window.innerWidth-pip.offsetWidth;
+
+    const maxTop=
+        window.innerHeight-pip.offsetHeight;
+
+    left=
+        Math.max(
+            0,
+            Math.min(left,maxLeft)
+        );
+
+    top=
+        Math.max(
+            0,
+            Math.min(top,maxTop)
+        );
+
+    pip.style.left=left+'px';
+    pip.style.top=top+'px';
+
+    pip.style.right='auto';
+    pip.style.bottom='auto';
+}
+
+function stopDrag(){
+
+    dragging=false;
+
+}
+
+</script>
+
+</body>
+</html>
