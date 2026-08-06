@@ -1,4 +1,5 @@
-<!DOCTYPE html> 
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -109,31 +110,73 @@ body{ margin:0; min-height:200vh; background:#f5f5f5; font-family:Arial,sans-ser
 .pip-video:fullscreen .pip-stage video{ object-fit:contain; }
 .pip-video:fullscreen #closeBtn{ display:none; }               /* hide close in fullscreen */
 .pip-video:fullscreen .pip-top{ padding:16px 20px; }
+.pip-video:fullscreen .pip-center{ width:90px; height:90px; }
+.pip-video:fullscreen .pip-center svg{ width:40px; height:40px; }
+
+/* --- fullscreen bottom dock: ONE column, bar directly above title --- */
+.pip-video:fullscreen .pip-dock{
+    position:absolute; left:0; right:0; bottom:0; z-index:5;
+    display:flex; flex-direction:column;
+    max-height:60vh;                         /* dock never covers more than 60% */
+    background:linear-gradient(180deg,transparent,rgba(0,0,0,.55) 18%,rgba(0,0,0,.88) 100%);
+    pointer-events:auto;
+}
+/* bar = top of the dock, so it sits right between video and title */
+.pip-video:fullscreen .pip-fsbar{
+    position:static; display:flex; flex:0 0 auto;
+    align-items:center; gap:14px; padding:14px 30px 10px; background:none;
+}
+/* title + description = below the bar; long copy scrolls inside the dock */
 .pip-video:fullscreen .pip-info{
-    position:absolute; left:0; right:0; bottom:0; padding:22px 30px 30px;
-    background:linear-gradient(180deg,transparent,rgba(0,0,0,.8)); color:#fff;
+    position:static; flex:1 1 auto; min-height:0; overflow-y:auto;
+    padding:4px 30px 26px; color:#fff; background:none;
 }
 .pip-video:fullscreen .pip-title{
-    font-size:26px; color:#fff;
+    font-size:24px; color:#fff; margin:0 0 4px;
     display:block; -webkit-line-clamp:unset; -webkit-box-orient:unset;
     overflow:visible; white-space:normal;
 }
 .pip-video:fullscreen .pip-desc{
-    font-size:15px; color:rgba(255,255,255,.85);
+    font-size:14px; color:rgba(255,255,255,.85);
     display:block; -webkit-line-clamp:unset; -webkit-box-orient:unset;
     overflow:visible; white-space:normal;
 }
-.pip-video:fullscreen .pip-moreinfo{ bottom:130px; right:30px; padding:9px 18px; font-size:14px; }
-.pip-video:fullscreen .pip-center{ width:90px; height:90px; }
-.pip-video:fullscreen .pip-center svg{ width:40px; height:40px; }
-.pip-video:fullscreen .pip-fsbar{
-    position:absolute; left:0; right:0; bottom:96px; z-index:5;
-    display:flex; align-items:center; gap:14px; padding:12px 30px;
-}
+.pip-video:fullscreen .pip-moreinfo{ bottom:auto; top:14px; right:30px; padding:9px 18px; font-size:14px; }
+
+/* dock is inert until fullscreen (it's just normal flow otherwise) */
+.pip-dock{ display:contents; }              /* in PiP mode, don't wrap layout */
+.pip-video:fullscreen .pip-dock{ display:flex; }
 
 @media(max-width:768px){
-    .pip-video.horizontal{ width:min(90vw,260px); }
-    .pip-video.vertical{   width:min(52vw,190px); }
+    .pip-video{ right:10px; bottom:10px; padding:6px; border-radius:14px; }
+    .pip-video.horizontal{ width:min(64vw,220px); }
+    .pip-video.vertical{   width:min(40vw,150px); }
+    .pip-round{ width:32px; height:32px; }
+    .pip-round svg{ width:15px; height:15px; }
+    .pip-top{ padding:7px 8px; gap:6px; }
+    .pip-center{ width:46px; height:46px; }
+    .pip-center svg{ width:20px; height:20px; }
+    .pip-moreinfo{ padding:5px 10px; font-size:10px; right:7px; bottom:7px; }
+    .pip-title{ font-size:12.5px; }
+    .pip-desc{ font-size:10.5px; }
+    .pip-info{ padding:8px 4px 2px; }
+}
+@media(max-width:420px){
+    .pip-video.horizontal{ width:min(72vw,200px); }
+    .pip-video.vertical{   width:min(46vw,140px); }
+}
+
+/* fullscreen tweaks for small screens */
+@media(max-width:768px){
+    .pip-video:fullscreen .pip-title{ font-size:18px; }
+    .pip-video:fullscreen .pip-desc{ font-size:12.5px; }
+    .pip-video:fullscreen .pip-info{ padding:12px 18px 20px; max-height:46vh; }
+    .pip-video:fullscreen .pip-fsbar{ bottom:46vh; padding:10px 18px; gap:10px; }
+    .pip-video:fullscreen .pip-fsbar__btn{ width:38px; height:38px; }
+    .pip-video:fullscreen .pip-fsbar__time{ font-size:12px; min-width:40px; }
+    .pip-video:fullscreen .pip-moreinfo{ top:12px; right:16px; font-size:12px; padding:7px 14px; }
+    .pip-video:fullscreen .pip-center{ width:66px; height:66px; }
+    .pip-video:fullscreen .pip-center svg{ width:28px; height:28px; }
 }
 @media (prefers-reduced-motion:reduce){ .pip-moreinfo::after{ animation:none; } }
 </style>
@@ -148,7 +191,8 @@ body{ margin:0; min-height:200vh; background:#f5f5f5; font-family:Arial,sans-ser
     <div class="pip-stage">
 
         <video id="pipPlayer" autoplay muted playsinline>
-            <source src="https://videos.pexels.com/video-files/7583536/7583536-hd_1080_1920_25fps.mp4">
+            
+            <source src="https://videos.pexels.com/video-files/7583536/7583536-hd_1080_1920_25fps.mp4">     
         </video>
 
         <div class="pip-top">
@@ -173,6 +217,12 @@ body{ margin:0; min-height:200vh; background:#f5f5f5; font-family:Arial,sans-ser
             <svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:currentColor;"><path d="M6 5l6 6-6 6V5zm7 0l6 6-6 6V5z"/></svg>
         </button>
 
+        
+
+    </div><!-- /pip-stage -->
+
+    <div class="pip-dock">
+
         <div class="pip-fsbar" id="pipFsbar">
             <button class="pip-fsbar__btn" id="fsPlayBtn" aria-label="Play/Pause">
                 <svg id="fsPlayIcon" viewBox="0 0 24 24"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>
@@ -185,11 +235,11 @@ body{ margin:0; min-height:200vh; background:#f5f5f5; font-family:Arial,sans-ser
             <span class="pip-fsbar__time pip-fsbar__time--end" id="fsDur">00:00</span>
         </div>
 
-    </div><!-- /pip-stage -->
-
-    <div class="pip-info">
+        <div class="pip-info">
         <h3 class="pip-title" id="pipTitle">Gold will be always with you..!</h3>
         <p class="pip-desc" id="pipDesc">Pure Care. Pure Value. Pure You. Timeless joy.</p>
+    </div>
+
     </div>
 
 </div>
