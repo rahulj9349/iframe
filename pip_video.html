@@ -1,377 +1,307 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Floating Video</title>
-
 <style>
+body{ margin:0; min-height:200vh; background:#f5f5f5; font-family:Arial,sans-serif; }
 
-body{
-    margin:0;
-    min-height:200vh;
-    background:#f5f5f5;
-    font-family:Arial,sans-serif;
-}
-
-/* ==================================
-   PIP CONTAINER
-================================== */
-
+/* ===== PIP CARD (padded frame) ===== */
 .pip-video{
-    position:fixed;
-    right:15px;
-    bottom:15px;
-    z-index:999999;
-    background:#000;
-    border-radius:16px;
-    overflow:hidden;
-    box-shadow:0 10px 35px rgba(0,0,0,.25);
-    touch-action:none;
-    user-select:none;
-    -webkit-user-select:none;
+    position:fixed; right:15px; bottom:15px; z-index:999999;
+    background:#fff; border-radius:18px; padding:8px;
+    box-shadow:0 12px 38px rgba(0,0,0,.28);
+    touch-action:none; user-select:none; -webkit-user-select:none;
 }
+.pip-video.horizontal{ width:clamp(240px,28vw,380px); }
+.pip-video.vertical{   width:clamp(190px,20vw,250px); }
 
-/* Horizontal Video */
+.pip-stage{ position:relative; border-radius:12px; overflow:hidden; background:#000; }
+.pip-video.horizontal .pip-stage{ aspect-ratio:16/9; }
+.pip-video.vertical   .pip-stage{ aspect-ratio:9/16; }
+.pip-stage video{ width:100%; height:100%; object-fit:cover; display:block; }
 
-.pip-video.horizontal{
-    width:clamp(240px,28vw,380px);
-    aspect-ratio:16/9;
+/* ===== TOP CONTROLS ===== */
+.pip-top{
+    position:absolute; top:0; left:0; right:0; z-index:4;
+    display:flex; align-items:center; gap:8px; padding:10px 12px;
+    background:linear-gradient(rgba(0,0,0,.55),transparent);
 }
-
-/* Vertical Video */
-
-.pip-video.vertical{
-    width:clamp(170px,18vw,240px);
-    aspect-ratio:9/16;
+.pip-top .spacer{ margin-left:auto; }
+.pip-round{
+    width:38px; height:38px; border:none; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background:rgba(20,20,20,.55); color:#fff; cursor:pointer;
+    backdrop-filter:blur(3px); transition:.2s;
 }
+.pip-round:hover{ background:rgba(0,0,0,.8); transform:scale(1.06); }
+.pip-round svg{ width:18px; height:18px; fill:currentColor; }
 
-.pip-video video{
-    width:100%;
-    height:100%;
-    object-fit:cover;
-    display:block;
+/* ===== CENTER REPLAY ===== */
+.pip-center{
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:3;
+    width:58px; height:58px; border:none; border-radius:50%;
+    display:none; align-items:center; justify-content:center;
+    color:#fff; background:rgba(20,20,20,.5);
+    box-shadow:0 6px 18px rgba(0,0,0,.4),0 0 0 4px rgba(255,255,255,.15);
+    cursor:pointer; transition:.18s;
 }
+.pip-video.ended .pip-center{ display:flex; }
+.pip-video.ended .pip-stage video{ filter:brightness(.6); }
+.pip-center:hover{ transform:translate(-50%,-50%) scale(1.08); background:rgba(0,0,0,.7); }
+.pip-center svg{ width:26px; height:26px; fill:none; stroke:#fff; stroke-width:2.2; }
 
-/* ==================================
-   CONTROLS
-================================== */
-
-.pip-controls{
-    position:absolute;
-    left:0;
-    right:0;
-    bottom:0;
-
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-
-    padding:8px 10px;
-
-    background:linear-gradient(
-        transparent,
-        rgba(0,0,0,.8)
-    );
+/* ===== MORE INFO PILL + shimmer ===== */
+.pip-moreinfo{
+    position:absolute; right:10px; bottom:10px; z-index:4;
+    display:inline-flex; align-items:center; gap:6px;
+    padding:7px 15px; border-radius:999px;
+    font-size:12px; font-weight:700; color:#8a6318; cursor:pointer;
+    border:1.5px solid #E7B84B;
+    background:linear-gradient(135deg,rgba(255,250,235,.95),rgba(246,226,122,.9));
+    box-shadow:0 4px 10px -4px rgba(120,80,10,.5);
+    overflow:hidden; isolation:isolate; transition:filter .2s ease;
 }
-
-.timer{
-    color:#fff;
-    font-size:12px;
-    font-weight:600;
+.pip-moreinfo:hover{ filter:brightness(1.06); }
+.pip-moreinfo > *{ position:relative; z-index:2; }
+.pip-moreinfo::after{
+    content:""; position:absolute; top:0; bottom:0; left:0; width:60%; z-index:1; pointer-events:none;
+    background:linear-gradient(115deg,transparent 0%,rgba(255,255,255,.15) 40%,rgba(255,255,255,.9) 50%,rgba(255,255,255,.15) 60%,transparent 100%);
+    transform:translateX(-160%); animation:pipShimmer 2.6s ease-in-out infinite;
 }
+@keyframes pipShimmer{ 0%{transform:translateX(-160%);} 55%{transform:translateX(220%);} 100%{transform:translateX(220%);} }
+.pip-video.vertical .pip-moreinfo{ padding:6px 12px; font-size:11px; }
 
-.controls-right{
-    display:flex;
-    align-items:center;
-    gap:6px;
+/* ===== TITLE + DESC ===== */
+.pip-info{ padding:10px 6px 4px; color:#2b2b2b; }
+.pip-title{
+    margin:0 0 2px; font-size:15px; font-weight:800; line-height:1.25; color:#222;
+    display:-webkit-box; -webkit-box-orient:vertical; overflow:hidden; text-overflow:ellipsis;
 }
-
-.pip-btn{
-    width:34px;
-    height:34px;
-
-    border:none;
-    border-radius:50%;
-
-    background:rgba(255,255,255,.15);
-
-    color:#fff;
-    cursor:pointer;
-
-    transition:.2s;
+.pip-desc{
+    margin:0; font-size:12px; line-height:1.35; color:#8a8177;
+    display:-webkit-box; -webkit-box-orient:vertical; overflow:hidden; text-overflow:ellipsis;
 }
+.pip-video.horizontal .pip-title{ -webkit-line-clamp:1; }
+.pip-video.vertical   .pip-title{ -webkit-line-clamp:2; }
+.pip-video.horizontal .pip-desc{ -webkit-line-clamp:1; }
+.pip-video.vertical   .pip-desc{ -webkit-line-clamp:1; }
 
-.pip-btn:hover{
-    background:rgba(255,255,255,.3);
+/* ===== FULLSCREEN PLAYBACK BAR ===== */
+.pip-fsbar{ display:none; }
+.pip-fsbar__btn{
+    width:44px; height:44px; flex:0 0 auto; border:none; border-radius:50%;
+    background:rgba(255,255,255,.16); color:#fff; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; transition:background .2s, transform .12s;
 }
+.pip-fsbar__btn:hover{ background:rgba(255,255,255,.3); transform:scale(1.06); }
+.pip-fsbar__btn svg{ width:22px; height:22px; fill:#fff; }
+.pip-fsbar__time{ color:#fff; font-size:14px; font-weight:600; font-variant-numeric:tabular-nums; min-width:48px; }
+.pip-fsbar__time--end{ text-align:right; color:rgba(255,255,255,.85); }
+.pip-fsbar__track{ flex:1 1 auto; height:6px; border-radius:99px; cursor:pointer; position:relative; background:rgba(255,255,255,.28); }
+.pip-fsbar__fill{ position:absolute; left:0; top:0; bottom:0; width:0; border-radius:99px; background:linear-gradient(90deg,#C8912B,#F6E27A); }
+.pip-fsbar__knob{ position:absolute; top:50%; left:0; width:15px; height:15px; border-radius:50%; transform:translate(-50%,-50%); background:#fff; box-shadow:0 0 0 3px rgba(246,226,122,.5); }
 
-/* ==================================
-   MOBILE
-================================== */
+/* ===== FULLSCREEN LAYOUT ===== */
+.pip-video:fullscreen{ width:100vw; height:100vh; max-width:none; padding:0; border-radius:0; background:#000; }
+.pip-video:fullscreen .pip-stage{ aspect-ratio:auto; width:100%; height:100%; border-radius:0; background:#000; }
+.pip-video:fullscreen .pip-stage video{ object-fit:contain; }
+.pip-video:fullscreen #closeBtn{ display:none; }               /* hide close in fullscreen */
+.pip-video:fullscreen .pip-top{ padding:16px 20px; }
+.pip-video:fullscreen .pip-info{
+    position:absolute; left:0; right:0; bottom:0; padding:22px 30px 30px;
+    background:linear-gradient(180deg,transparent,rgba(0,0,0,.8)); color:#fff;
+}
+.pip-video:fullscreen .pip-title{
+    font-size:26px; color:#fff;
+    display:block; -webkit-line-clamp:unset; -webkit-box-orient:unset;
+    overflow:visible; white-space:normal;
+}
+.pip-video:fullscreen .pip-desc{
+    font-size:15px; color:rgba(255,255,255,.85);
+    display:block; -webkit-line-clamp:unset; -webkit-box-orient:unset;
+    overflow:visible; white-space:normal;
+}
+.pip-video:fullscreen .pip-moreinfo{ bottom:130px; right:30px; padding:9px 18px; font-size:14px; }
+.pip-video:fullscreen .pip-center{ width:90px; height:90px; }
+.pip-video:fullscreen .pip-center svg{ width:40px; height:40px; }
+.pip-video:fullscreen .pip-fsbar{
+    position:absolute; left:0; right:0; bottom:96px; z-index:5;
+    display:flex; align-items:center; gap:14px; padding:12px 30px;
+}
 
 @media(max-width:768px){
-
-    .pip-video.horizontal{
-        width:min(90vw,260px);
-    }
-
-    .pip-video.vertical{
-        width:min(48vw,180px);
-    }
-
+    .pip-video.horizontal{ width:min(90vw,260px); }
+    .pip-video.vertical{   width:min(52vw,190px); }
 }
-
+@media (prefers-reduced-motion:reduce){ .pip-moreinfo::after{ animation:none; } }
 </style>
 </head>
 <body>
 
-<h2 style="padding:20px">
-    Floating Video Demo
-</h2>
+<h2 style="padding:20px">Floating Video Demo</h2>
 
-<!-- Change horizontal -> vertical -->
-
+<!-- Change horizontal <-> vertical via the class below -->
 <div class="pip-video vertical" id="pipVideo">
 
-    <video
-        id="pipPlayer"
-        autoplay
-        muted
-        loop
-        playsinline>
+    <div class="pip-stage">
 
-        <source
-            src="https://videos.pexels.com/video-files/7583536/7583536-hd_1080_1920_25fps.mp4">
+        <video id="pipPlayer" autoplay muted playsinline>
+            <source src="https://videos.pexels.com/video-files/7583536/7583536-hd_1080_1920_25fps.mp4">
+        </video>
 
-    </video>
-
-    <div class="pip-controls">
-
-        <div class="timer" id="videoTimer">
-            00:00
+        <div class="pip-top">
+            <button class="pip-round" id="muteBtn" aria-label="Mute">
+                <svg viewBox="0 0 24 24"><path d="M3 10v4h4l5 5V5L7 10H3zm13.5 2a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/></svg>
+            </button>
+            <button class="pip-round" id="fullscreenBtn" aria-label="Fullscreen">
+                <svg viewBox="0 0 24 24"><path d="M4 9V4h5v2H6v3H4zm11-5h5v5h-2V6h-3V4zM6 15v3h3v2H4v-5h2zm12 0h2v5h-5v-2h3v-3z"/></svg>
+            </button>
+            <span class="spacer"></span>
+            <button class="pip-round" id="closeBtn" aria-label="Close">
+                <svg viewBox="0 0 24 24"><path d="M6.4 5 12 10.6 17.6 5 19 6.4 13.4 12 19 17.6 17.6 19 12 13.4 6.4 19 5 17.6 10.6 12 5 6.4z"/></svg>
+            </button>
         </div>
 
-        <div class="controls-right">
+        <button class="pip-center" id="replayBtn" aria-label="Replay">
+            <svg viewBox="0 0 24 24"><path d="M12 5V2L7 7l5 5V9a5 5 0 1 1-5 5H5a7 7 0 1 0 7-9z"/></svg>
+        </button>
 
-            <button
-                class="pip-btn"
-                id="playPauseBtn">
-                ⏸
+        <button class="pip-moreinfo" id="moreInfoBtn" type="button">
+            More info
+            <svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:currentColor;"><path d="M6 5l6 6-6 6V5zm7 0l6 6-6 6V5z"/></svg>
+        </button>
+
+        <div class="pip-fsbar" id="pipFsbar">
+            <button class="pip-fsbar__btn" id="fsPlayBtn" aria-label="Play/Pause">
+                <svg id="fsPlayIcon" viewBox="0 0 24 24"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>
             </button>
-
-            <button
-                class="pip-btn"
-                id="fullscreenBtn">
-                ⛶
-            </button>
-
-            <button
-                class="pip-btn"
-                id="closeBtn">
-                ✕
-            </button>
-
+            <span class="pip-fsbar__time" id="fsCur">00:00</span>
+            <div class="pip-fsbar__track" id="fsTrack">
+                <div class="pip-fsbar__fill" id="fsFill"></div>
+                <div class="pip-fsbar__knob" id="fsKnob"></div>
+            </div>
+            <span class="pip-fsbar__time pip-fsbar__time--end" id="fsDur">00:00</span>
         </div>
 
+    </div><!-- /pip-stage -->
+
+    <div class="pip-info">
+        <h3 class="pip-title" id="pipTitle">Gold will be always with you..!</h3>
+        <p class="pip-desc" id="pipDesc">Pure Care. Pure Value. Pure You. Timeless joy.</p>
     </div>
 
 </div>
 
 <script>
-
-const pip = document.getElementById('pipVideo');
+const pip   = document.getElementById('pipVideo');
 const video = document.getElementById('pipPlayer');
+const muteBtn      = document.getElementById('muteBtn');
+const fullscreenBtn= document.getElementById('fullscreenBtn');
+const closeBtn     = document.getElementById('closeBtn');
+const replayBtn    = document.getElementById('replayBtn');
+const moreInfoBtn  = document.getElementById('moreInfoBtn');
 
-const playPauseBtn = document.getElementById('playPauseBtn');
-const fullscreenBtn = document.getElementById('fullscreenBtn');
-const closeBtn = document.getElementById('closeBtn');
-const timer = document.getElementById('videoTimer');
-
-/* ==========================
-   PLAY / PAUSE
-========================== */
-
-playPauseBtn.addEventListener('click', () => {
-
-    if(video.paused){
-
-        video.play();
-        playPauseBtn.innerHTML='⏸';
-
-    }else{
-
-        video.pause();
-        playPauseBtn.innerHTML='▶';
-
-    }
-
+muteBtn.addEventListener('click', () => {
+    video.muted = !video.muted;
+    muteBtn.style.opacity = video.muted ? '0.55' : '1';
 });
 
-/* ==========================
-   FULL SCREEN
-========================== */
-
+let savedPos = null;
 fullscreenBtn.addEventListener('click', () => {
-
-    if(video.requestFullscreen){
-        video.requestFullscreen();
+    if(document.fullscreenElement || document.webkitFullscreenElement){
+        (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    }else{
+        savedPos = { left:pip.style.left, top:pip.style.top, right:pip.style.right, bottom:pip.style.bottom };
+        (pip.requestFullscreen || pip.webkitRequestFullscreen).call(pip);
     }
+});
+function onFsChange(){
+    const fs = document.fullscreenElement || document.webkitFullscreenElement;
+    if(!fs && savedPos){
+        pip.style.left=savedPos.left; pip.style.top=savedPos.top;
+        pip.style.right=savedPos.right; pip.style.bottom=savedPos.bottom;
+        savedPos=null; requestAnimationFrame(clampIntoView);
+    }
+}
+document.addEventListener('fullscreenchange', onFsChange);
+document.addEventListener('webkitfullscreenchange', onFsChange);
 
+closeBtn.addEventListener('click', () => { pip.style.display='none'; });
+replayBtn.addEventListener('click', () => { video.currentTime=0; video.play(); });
+moreInfoBtn.addEventListener('click', () => { console.log('More info clicked'); });
+
+video.addEventListener('ended', () => { pip.classList.add('ended'); });
+video.addEventListener('play',  () => { pip.classList.remove('ended'); });
+
+video.muted = true;
+window.addEventListener('load', () => {
+    const p = video.play();
+    if(p && p.catch){ p.catch(() => { pip.classList.add('ended'); }); }
 });
 
-/* ==========================
-   CLOSE
-========================== */
-
-closeBtn.addEventListener('click', () => {
-
-    pip.style.display='none';
-
-});
-
-/* ==========================
-   TIMER
-========================== */
-
+const fsPlayBtn=document.getElementById('fsPlayBtn');
+const fsPlayIcon=document.getElementById('fsPlayIcon');
+const fsCur=document.getElementById('fsCur');
+const fsDur=document.getElementById('fsDur');
+const fsTrack=document.getElementById('fsTrack');
+const fsFill=document.getElementById('fsFill');
+const fsKnob=document.getElementById('fsKnob');
+const FS_PLAY='<path d="M8 5v14l11-7z"/>';
+const FS_PAUSE='<path d="M7 5h4v14H7zM13 5h4v14h-4z"/>';
+function fsFmt(s){ if(isNaN(s)) return '00:00'; const m=Math.floor(s/60),ss=Math.floor(s%60); return String(m).padStart(2,'0')+':'+String(ss).padStart(2,'0'); }
+fsPlayBtn.addEventListener('click', () => { video.paused ? video.play() : video.pause(); });
+video.addEventListener('play',  () => { fsPlayIcon.innerHTML=FS_PAUSE; });
+video.addEventListener('pause', () => { fsPlayIcon.innerHTML=FS_PLAY; });
+video.addEventListener('loadedmetadata', () => { fsDur.textContent=fsFmt(video.duration); });
 video.addEventListener('timeupdate', () => {
-
-    const mins =
-        Math.floor(video.currentTime/60);
-
-    const secs =
-        Math.floor(video.currentTime%60);
-
-    timer.innerHTML =
-        String(mins).padStart(2,'0')
-        +
-        ':'
-        +
-        String(secs).padStart(2,'0');
-
+    const p=(video.currentTime/video.duration)*100||0;
+    fsFill.style.width=p+'%'; fsKnob.style.left=p+'%'; fsCur.textContent=fsFmt(video.currentTime);
+    if(!isNaN(video.duration)) fsDur.textContent=fsFmt(video.duration);
+});
+fsTrack.addEventListener('click', (e) => {
+    const r=fsTrack.getBoundingClientRect();
+    video.currentTime=((e.clientX-r.left)/r.width)*(video.duration||0);
 });
 
-/* ==========================
-   DRAG SUPPORT
-========================== */
-
-let dragging=false;
-let offsetX=0;
-let offsetY=0;
-
-/* Desktop */
-
+let dragging=false, offsetX=0, offsetY=0;
 pip.addEventListener('mousedown', startDrag);
 document.addEventListener('mousemove', drag);
 document.addEventListener('mouseup', stopDrag);
-
-/* Mobile */
-
-pip.addEventListener(
-    'touchstart',
-    startDragTouch,
-    {passive:false}
-);
-
-document.addEventListener(
-    'touchmove',
-    dragTouch,
-    {passive:false}
-);
-
-document.addEventListener(
-    'touchend',
-    stopDrag
-);
-
+pip.addEventListener('touchstart', startDragTouch, {passive:false});
+document.addEventListener('touchmove', dragTouch, {passive:false});
+document.addEventListener('touchend', stopDrag);
+function isControl(t){ return t.closest('button, .pip-fsbar__track, a'); }
 function startDrag(e){
-
-    dragging=true;
-
-    offsetX=e.clientX-pip.offsetLeft;
-    offsetY=e.clientY-pip.offsetTop;
+    if(isControl(e.target)) return;
+    if(document.fullscreenElement) return;
+    dragging=true; offsetX=e.clientX-pip.offsetLeft; offsetY=e.clientY-pip.offsetTop;
 }
-
 function startDragTouch(e){
-
     if(!e.touches.length) return;
-
-    dragging=true;
-
-    const touch=e.touches[0];
-
-    offsetX=
-        touch.clientX-pip.offsetLeft;
-
-    offsetY=
-        touch.clientY-pip.offsetTop;
+    if(isControl(e.target)) return;
+    if(document.fullscreenElement) return;
+    dragging=true; const t=e.touches[0]; offsetX=t.clientX-pip.offsetLeft; offsetY=t.clientY-pip.offsetTop;
 }
-
-function drag(e){
-
-    if(!dragging) return;
-
-    movePip(
-        e.clientX,
-        e.clientY
-    );
+function drag(e){ if(dragging) movePip(e.clientX,e.clientY); }
+function dragTouch(e){ if(!dragging) return; e.preventDefault(); const t=e.touches[0]; movePip(t.clientX,t.clientY); }
+function movePip(cx,cy){
+    let left=cx-offsetX, top=cy-offsetY;
+    const vw=document.documentElement.clientWidth, vh=document.documentElement.clientHeight;
+    left=Math.max(0,Math.min(left,vw-pip.offsetWidth));
+    top =Math.max(0,Math.min(top ,vh-pip.offsetHeight));
+    pip.style.left=left+'px'; pip.style.top=top+'px'; pip.style.right='auto'; pip.style.bottom='auto';
 }
-
-function dragTouch(e){
-
-    if(!dragging) return;
-
-    e.preventDefault();
-
-    const touch=e.touches[0];
-
-    movePip(
-        touch.clientX,
-        touch.clientY
-    );
+function stopDrag(){ dragging=false; }
+function clampIntoView(){
+    const vw=document.documentElement.clientWidth, vh=document.documentElement.clientHeight;
+    const r=pip.getBoundingClientRect();
+    pip.style.left=Math.min(Math.max(r.left,0),vw-pip.offsetWidth)+'px';
+    pip.style.top =Math.min(Math.max(r.top ,0),vh-pip.offsetHeight)+'px';
+    pip.style.right='auto'; pip.style.bottom='auto';
 }
-
-function movePip(clientX,clientY){
-
-    let left=
-        clientX-offsetX;
-
-    let top=
-        clientY-offsetY;
-
-    const maxLeft=
-        window.innerWidth-pip.offsetWidth;
-
-    const maxTop=
-        window.innerHeight-pip.offsetHeight;
-
-    left=
-        Math.max(
-            0,
-            Math.min(left,maxLeft)
-        );
-
-    top=
-        Math.max(
-            0,
-            Math.min(top,maxTop)
-        );
-
-    pip.style.left=left+'px';
-    pip.style.top=top+'px';
-
-    pip.style.right='auto';
-    pip.style.bottom='auto';
-}
-
-function stopDrag(){
-
-    dragging=false;
-
-}
-
+window.addEventListener('resize', clampIntoView);
 </script>
-
 </body>
 </html>
