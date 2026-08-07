@@ -21,7 +21,12 @@ body{ margin:0; min-height:200vh; background:#f5f5f5; font-family:Arial,sans-ser
 .pip-stage{ position:relative; border-radius:12px; overflow:hidden; background:#000; }
 .pip-video.horizontal .pip-stage{ aspect-ratio:16/9; }
 .pip-video.vertical   .pip-stage{ aspect-ratio:9/16; }
-.pip-stage video{ width:100%; height:100%; object-fit:cover; display:block; }
+.pip-stage video{
+    width:100%; height:100%;
+    object-fit:contain;              /* fit whole video, keep its own ratio */
+    object-position:center;          /* center it -> letterbox bars top/btm or sides */
+    display:block; background:#000;  /* bars are black */
+}
 
 /* ===== TOP CONTROLS ===== */
 .pip-top{
@@ -38,6 +43,10 @@ body{ margin:0; min-height:200vh; background:#f5f5f5; font-family:Arial,sans-ser
 }
 .pip-round:hover{ background:rgba(0,0,0,.8); transform:scale(1.06); }
 .pip-round svg{ width:18px; height:18px; fill:currentColor; }
+#fullscreenBtn .ic-zoom-out{ display:none; }
+.pip-video:fullscreen #fullscreenBtn .ic-zoom-in{ display:none; }
+.pip-video:fullscreen #fullscreenBtn .ic-zoom-out{ display:inline; }
+#fsIcon{ fill:none; stroke:currentColor; }
 
 /* ===== CENTER REPLAY ===== */
 .pip-center{
@@ -55,7 +64,7 @@ body{ margin:0; min-height:200vh; background:#f5f5f5; font-family:Arial,sans-ser
 
 /* ===== MORE INFO PILL + shimmer ===== */
 .pip-moreinfo{
-    position:absolute; right:10px; bottom:10px; z-index:4;
+    position:absolute; right:10px; bottom:10px; z-index:4; contain:paint;
     display:inline-flex; align-items:center; gap:6px;
     padding:7px 15px; border-radius:999px;
     font-size:12px; font-weight:700; color:#8a6318; cursor:pointer;
@@ -66,10 +75,11 @@ body{ margin:0; min-height:200vh; background:#f5f5f5; font-family:Arial,sans-ser
 }
 .pip-moreinfo:hover{ filter:brightness(1.06); }
 .pip-moreinfo > *{ position:relative; z-index:2; }
-.pip-moreinfo::after{
-    content:""; position:absolute; top:0; bottom:0; left:0; width:60%; z-index:1; pointer-events:none;
+#moreInfoBtn.pip-moreinfo::after{
+    content:""; position:absolute; inset:0; width:60%; z-index:1; pointer-events:none;
     background:linear-gradient(115deg,transparent 0%,rgba(255,255,255,.15) 40%,rgba(255,255,255,.9) 50%,rgba(255,255,255,.15) 60%,transparent 100%);
     transform:translateX(-160%); animation:pipShimmer 2.6s ease-in-out infinite;
+    border-radius:inherit;
 }
 @keyframes pipShimmer{ 0%{transform:translateX(-160%);} 55%{transform:translateX(220%);} 100%{transform:translateX(220%);} }
 .pip-video.vertical .pip-moreinfo{ padding:6px 12px; font-size:11px; }
@@ -110,38 +120,51 @@ body{ margin:0; min-height:200vh; background:#f5f5f5; font-family:Arial,sans-ser
 .pip-video:fullscreen .pip-stage video{ object-fit:contain; }
 .pip-video:fullscreen #closeBtn{ display:none; }               /* hide close in fullscreen */
 .pip-video:fullscreen .pip-top{ padding:16px 20px; }
+.pip-video:fullscreen #fullscreenBtn{ margin-left:auto; }   /* zoom-out to the right */
+.pip-video:fullscreen .pip-top .spacer{ display:none; }
 .pip-video:fullscreen .pip-center{ width:90px; height:90px; }
 .pip-video:fullscreen .pip-center svg{ width:40px; height:40px; }
 
-/* --- fullscreen bottom dock: ONE column, bar directly above title --- */
+/* --- fullscreen bottom dock ---
+   Visual order BOTTOM -> TOP: progress bar, description, title, More info.
+   Achieved with column-reverse: DOM order (bar, info) renders bar at BOTTOM;
+   inside .pip-info we force title above description; More info is moved into
+   the dock (top) by JS only in fullscreen. */
 .pip-video:fullscreen .pip-dock{
     position:absolute; left:0; right:0; bottom:0; z-index:5;
-    display:flex; flex-direction:column;
-    max-height:60vh;                         /* dock never covers more than 60% */
+    display:flex; flex-direction:column;           /* order set per child below */
+    max-height:60vh;
     background:linear-gradient(180deg,transparent,rgba(0,0,0,.55) 18%,rgba(0,0,0,.88) 100%);
-    pointer-events:auto;
 }
-/* bar = top of the dock, so it sits right between video and title */
+/* TOP -> BOTTOM: More info (0), title+desc (1), progress bar (2) */
 .pip-video:fullscreen .pip-fsbar{
+    order:2;
     position:static; display:flex; flex:0 0 auto;
-    align-items:center; gap:14px; padding:14px 30px 10px; background:none;
+    align-items:center; gap:14px; padding:10px 30px 22px; background:none;
 }
-/* title + description = below the bar; long copy scrolls inside the dock */
 .pip-video:fullscreen .pip-info{
+    order:1;
     position:static; flex:1 1 auto; min-height:0; overflow-y:auto;
-    padding:4px 30px 26px; color:#fff; background:none;
+    padding:6px 30px 6px; color:#fff; background:none;
+    display:flex; flex-direction:column;
 }
 .pip-video:fullscreen .pip-title{
-    font-size:24px; color:#fff; margin:0 0 4px;
+    order:1; font-size:24px; color:#fff; margin:0 0 4px;
     display:block; -webkit-line-clamp:unset; -webkit-box-orient:unset;
     overflow:visible; white-space:normal;
 }
 .pip-video:fullscreen .pip-desc{
-    font-size:14px; color:rgba(255,255,255,.85);
+    order:2; font-size:14px; color:rgba(255,255,255,.85);
     display:block; -webkit-line-clamp:unset; -webkit-box-orient:unset;
     overflow:visible; white-space:normal;
 }
-.pip-video:fullscreen .pip-moreinfo{ bottom:auto; top:14px; right:30px; padding:9px 18px; font-size:14px; }
+/* More info at the TOP of the stack (in-flow once JS moves it into the dock) */
+.pip-video:fullscreen .pip-moreinfo{
+    order:0;
+    position:relative; align-self:flex-end; overflow:hidden; contain:paint;
+    margin:14px 30px 6px 0; bottom:auto; top:auto; right:auto;
+    padding:9px 18px; font-size:14px;
+}
 
 /* dock is inert until fullscreen (it's just normal flow otherwise) */
 .pip-dock{ display:contents; }              /* in PiP mode, don't wrap layout */
@@ -174,7 +197,7 @@ body{ margin:0; min-height:200vh; background:#f5f5f5; font-family:Arial,sans-ser
     .pip-video:fullscreen .pip-fsbar{ bottom:46vh; padding:10px 18px; gap:10px; }
     .pip-video:fullscreen .pip-fsbar__btn{ width:38px; height:38px; }
     .pip-video:fullscreen .pip-fsbar__time{ font-size:12px; min-width:40px; }
-    .pip-video:fullscreen .pip-moreinfo{ top:12px; right:16px; font-size:12px; padding:7px 14px; }
+    .pip-video:fullscreen .pip-moreinfo{ position:relative; overflow:hidden; contain:paint; margin:14px 18px 6px 0; align-self:flex-end; font-size:12px; padding:7px 14px; }
     .pip-video:fullscreen .pip-center{ width:66px; height:66px; }
     .pip-video:fullscreen .pip-center svg{ width:28px; height:28px; }
 }
@@ -186,12 +209,12 @@ body{ margin:0; min-height:200vh; background:#f5f5f5; font-family:Arial,sans-ser
 <h2 style="padding:20px">Floating Video Demo</h2>
 
 <!-- Change horizontal <-> vertical via the class below -->
-<div class="pip-video vertical" id="pipVideo">
+<div class="pip-video horizontal" id="pipVideo">
 
     <div class="pip-stage">
 
         <video id="pipPlayer" autoplay muted playsinline>
-            <source src="https://videos.pexels.com/video-files/7583536/7583536-hd_1080_1920_25fps.mp4">
+            <source src="https://videos.pexels.com/video-files/28926280/12519177_1920_1080_30fps.mp4">
         </video>
 
         <div class="pip-top">
@@ -199,7 +222,14 @@ body{ margin:0; min-height:200vh; background:#f5f5f5; font-family:Arial,sans-ser
                 <svg viewBox="0 0 24 24"><path d="M3 10v4h4l5 5V5L7 10H3zm13.5 2a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/></svg>
             </button>
             <button class="pip-round" id="fullscreenBtn" aria-label="Fullscreen">
-                <svg viewBox="0 0 24 24"><path d="M4 9V4h5v2H6v3H4zm11-5h5v5h-2V6h-3V4zM6 15v3h3v2H4v-5h2zm12 0h2v5h-5v-2h3v-3z"/></svg>
+                <!-- zoom IN (expand) — shown in PiP -->
+                <svg class="ic-zoom-in" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 4h6v6M20 4l-7 7M10 20H4v-6M4 20l7-7"/>
+                </svg>
+                <!-- zoom OUT (collapse) — shown in fullscreen -->
+                <svg class="ic-zoom-out" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 10h-6V4M14 10l7-7M4 14h6v6M10 14l-7 7"/>
+                </svg>
             </button>
             <span class="spacer"></span>
             <button class="pip-round" id="closeBtn" aria-label="Close">
@@ -235,8 +265,8 @@ body{ margin:0; min-height:200vh; background:#f5f5f5; font-family:Arial,sans-ser
         </div>
 
         <div class="pip-info">
-        <h3 class="pip-title" id="pipTitle">22K Traditional Gold Filigree Bangles</h3>
-        <p class="pip-desc" id="pipDesc">Slip a touch of timeless heritage onto your wrist with our 22K Traditional Gold Filigree Bangles. Expertly crafted from 91.6% pure gold, these solid circular bands feature intricate wirework that catches the light with every move. Designed for weddings, festivals, or special family gatherings, they offer both brilliant cultural elegance and lasting financial value.</p>
+        <h3 class="pip-title" id="pipTitle">Gold will be always with you..!</h3>
+        <p class="pip-desc" id="pipDesc">Pure Care. Pure Value. Pure You. Timeless joy.</p>
     </div>
 
     </div>
@@ -266,7 +296,26 @@ fullscreenBtn.addEventListener('click', () => {
         (pip.requestFullscreen || pip.webkitRequestFullscreen).call(pip);
     }
 });
+const FS_ICON_EXPAND  = "M14 4h6v6M20 4l-7 7M10 20H4v-6M4 20l7-7";   /* zoom in  (outward) */
+const FS_ICON_COLLAPSE= "M20 10h-6V4M20 4l-7 7M4 14h6v6M4 20l7-7";     /* zoom out (inward)  */
+function setFsIcon(isFs){
+    const ic = document.getElementById('fsIcon');
+    if(ic) ic.querySelector('path').setAttribute('d', isFs ? FS_ICON_COLLAPSE : FS_ICON_EXPAND);
+}
+
 function onFsChange(){
+    const fsIcon = document.fullscreenElement || document.webkitFullscreenElement;
+    setFsIcon(!!fsIcon);
+    // move More info into/out of the dock so it stacks above the title in fullscreen
+    const dock = document.querySelector('.pip-dock');
+    const stage = document.querySelector('.pip-stage');
+    const mi = document.getElementById('moreInfoBtn');
+    const fsNow = document.fullscreenElement || document.webkitFullscreenElement;
+    if(fsNow){
+        if(mi && dock && mi.parentElement !== dock){ dock.insertBefore(mi, dock.firstChild); }
+    }else{
+        if(mi && stage && mi.parentElement !== stage){ stage.appendChild(mi); }
+    }
     const fs = document.fullscreenElement || document.webkitFullscreenElement;
     if(!fs && savedPos){
         pip.style.left=savedPos.left; pip.style.top=savedPos.top;
