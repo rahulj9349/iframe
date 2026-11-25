@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gold Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#d4a017;--gold2:#f6d365;--dark:#1a1608;--bg:#fffaf0;--card:#fff}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,sans-serif;background:var(--bg);color:var(--dark);line-height:1.5}
+header{background:linear-gradient(135deg,var(--dark),#4a3a0a);color:#fff;text-align:center;padding:48px 16px}
+header h1{font-family:'Playfair Display',serif;font-size:clamp(2rem,6vw,3.2rem);color:var(--gold2)}
+header p{opacity:.8;margin-top:8px}
+main{max-width:960px;margin:-30px auto 40px;padding:0 16px;display:grid;gap:20px;grid-template-columns:1fr 1fr}
+.card{background:var(--card);border-radius:16px;padding:24px;box-shadow:0 8px 24px rgba(0,0,0,.08)}
+h2{font-family:'Playfair Display',serif;margin-bottom:16px}
+label{display:block;font-size:.85rem;font-weight:600;margin:12px 0 4px}
+input,select{width:100%;padding:11px;border:1px solid #e2d5a8;border-radius:8px;font:inherit}
+input:focus,select:focus{outline:2px solid var(--gold);border-color:transparent}
+button{margin-top:18px;width:100%;padding:13px;border:0;border-radius:8px;font:600 1rem Inter;cursor:pointer;color:var(--dark);background:linear-gradient(135deg,var(--gold2),var(--gold));transition:.2s}
+button:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(212,160,23,.4)}
+.row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px dashed #e2d5a8}
+.total{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:800;color:var(--gold);border:0;padding-top:16px}
+.rates{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;text-align:center}
+.rates div{background:#fff7dc;border-radius:12px;padding:14px}
+.rates b{display:block;font-size:1.2rem}
+footer{text-align:center;padding:20px;font-size:.8rem;opacity:.6}
+@media(max-width:700px){main{grid-template-columns:1fr}.rates{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<header><h1>✨ Gold Calculator</h1><p>Estimate jewellery price with making charges &amp; GST</p></header>
+<main>
+  <section class="card rates" id="rates"></section>
+  <section class="card">
+    <h2>Enter Details</h2>
+    <label>Weight (grams)</label><input id="w" type="number" value="10" min="0" step="0.01">
+    <label>Purity</label>
+    <select id="k"><option value="24">24K (99.9%)</option><option value="22" selected>22K (91.6%)</option><option value="18">18K (75%)</option><option value="14">14K (58.3%)</option></select>
+    <label>24K Rate per gram (₹)</label><input id="r" type="number" value="7500" min="0">
+    <label>Making charges (%)</label><input id="m" type="number" value="8" min="0" step="0.1">
+    <label>GST (%)</label><input id="g" type="number" value="3" min="0" step="0.1">
+    <button id="calc">Calculate</button>
+  </section>
+  <section class="card">
+    <h2>Estimate</h2>
+    <div class="row"><span>Gold value</span><b id="o1">₹0</b></div>
+    <div class="row"><span>Making charges</span><b id="o2">₹0</b></div>
+    <div class="row"><span>GST</span><b id="o3">₹0</b></div>
+    <div class="row total"><span>Total</span><span id="o4">₹0</span></div>
+  </section>
+</main>
+<footer>Dummy page – rates are sample values only.</footer>
+<script>
+const $=id=>document.getElementById(id),f=n=>'₹'+Math.round(n).toLocaleString('en-IN');
+function calc(){
+  const w=+$('w').value,k=+$('k').value,r=+$('r').value,m=+$('m').value,g=+$('g').value;
+  const gold=w*r*k/24,make=gold*m/100,gst=(gold+make)*g/100;
+  $('o1').textContent=f(gold);$('o2').textContent=f(make);$('o3').textContent=f(gst);$('o4').textContent=f(gold+make+gst);
+  $('rates').innerHTML=[24,22,18,14].map(x=>`<div>${x}K<b>${f(r*x/24)}/g</b></div>`).join('');
+}
+$('calc').onclick=calc;document.querySelectorAll('input,select').forEach(e=>e.oninput=calc);calc();
+</script>
+</body>
+</html>
